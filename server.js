@@ -1,4 +1,4 @@
-// 1. Dòng này BẮT BUỘC ở trên cùng để nạp biến môi trường
+// 1. Dòng này BẮT BUỘC ở trên cùng
 require('dotenv').config(); 
 
 const express = require('express');
@@ -7,21 +7,25 @@ const cors = require('cors');
 const fs = require('fs');
 const multer = require('multer');
 const mammoth = require('mammoth'); 
+const path = require('path'); // Thêm thư viện xử lý đường dẫn
 
 let pdfParse = require('pdf-parse');
 if (typeof pdfParse !== 'function' && pdfParse.default) {
     pdfParse = pdfParse.default;
 }
 
-// 2. Lấy Key từ file ẩn (.env) thay vì viết trực tiếp
+// --- TỰ ĐỘNG TẠO THƯ MỤC UPLOADS (FIX LỖI UPLOAD) ---
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
+
 const MY_API_KEY = process.env.GOOGLE_API_KEY; 
 const TEACHER_SECRET_CODE = process.env.TEACHER_SECRET; 
 const PORT = process.env.PORT || 3000;
 
-// Kiểm tra nhanh xem đã có Key chưa (tránh lỗi ngớ ngẩn)
+// Fallback nếu quên cấu hình env trên máy local (để demo chạy được ngay)
 if (!MY_API_KEY) {
-    console.error("❌ LỖI: Chưa tìm thấy GOOGLE_API_KEY! Hãy kiểm tra file .env");
-    process.exit(1);
+    console.warn("⚠️ CẢNH BÁO: Chưa có API Key trong .env hoặc Environment Variables!");
 }
 
 const app = express();
@@ -37,7 +41,9 @@ const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static('public'));
+
+// --- FIX LỖI GIAO DIỆN (PHỤC VỤ FILE Ở ROOT) ---
+app.use(express.static('.')); 
 
 const genAI = new GoogleGenerativeAI(MY_API_KEY);
 
@@ -86,6 +92,11 @@ function cosineSimilarity(vecA, vecB) {
 }
 
 loadData();
+
+// ROUTE TRANG CHỦ (Quan trọng để Render hiển thị web)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.post('/register', (req, res) => {
     const { username, password, role, secretCode } = req.body;
