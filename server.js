@@ -238,12 +238,11 @@ app.post('/ask-ai', async (req, res) => {
         
         const topMatches = scoredDocs.slice(0, 5); 
         const contextContent = topMatches.map(m => `--- Nguồn: ${m.source} ---\n${m.content}`).join("\n\n");
-
         // 3. Prompt Cực Mạnh để xử lý Layout
         const systemInstruction = `
         Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
         
-        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO".
+        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
 
         DỮ LIỆU THAM KHẢO:
         ${contextContent}
@@ -255,8 +254,8 @@ app.post('/ask-ai', async (req, res) => {
         4. **Bảng biểu:** Nếu dữ liệu có tính so sánh, hãy trình bày dưới dạng Bảng (Table).
 
         ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
-        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích.
-        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên.
+        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm.
+        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
         `;
 
         // 4. Gọi Model
