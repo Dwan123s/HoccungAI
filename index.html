@@ -5,180 +5,432 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Học Cùng AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        :root { --bg: #0f172a; --panel: #1e293b; --primary: #6366f1; --text: #f8fafc; --danger: #ef4444; }
+        /* --- 1. CORE VARIABLES & RESET --- */
+        :root {
+            --bg-body: #0f172a;       /* Slate 900 */
+            --bg-panel: #1e293b;      /* Slate 800 */
+            --bg-bubble-ai: #1e293b;
+            --bg-bubble-user: #4f46e5; /* Indigo 600 */
+            --primary: #6366f1;       /* Indigo 500 */
+            --primary-hover: #4338ca;
+            --text-main: #f8fafc;     /* Slate 50 */
+            --text-sub: #94a3b8;      /* Slate 400 */
+            --border: #334155;        /* Slate 700 */
+            --danger: #ef4444;
+            --font-main: 'Inter', sans-serif;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
         
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-size: 15px;
+        }
+
         /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* AUTH SCREEN */
-        #authScreen { position: fixed; inset: 0; background: rgba(15,23,42,0.98); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-box { background: var(--panel); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .input-field { width: 100%; padding: 14px; margin: 10px 0; background: #020617; border: 1px solid #334155; color: white; border-radius: 12px; font-size: 16px; }
-        .btn-primary { width: 100%; padding: 14px; margin-top: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.98); }
-
-        /* MAIN LAYOUT */
+        /* --- 2. LAYOUT --- */
         #app { display: none; width: 100%; height: 100%; position: relative; }
-        .sidebar { width: 280px; background: var(--panel); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #334155; z-index: 100; transition: transform 0.3s; }
-        .main { flex: 1; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at top right, #1e293b 0%, transparent 40%); width: 100%; }
-        
-        /* CHAT LIST */
-        .chat-list { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
-        
-        /* MESSAGE BUBBLES */
-        .msg { display: flex; gap: 10px; width: 100%; animation: fadeIn 0.3s ease; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-body) 60%);
+            width: 100%;
+        }
+
+        /* --- 3. CHAT AREA (Core UX) --- */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15%; /* Căn giữa nội dung trên màn hình lớn */
+            padding-bottom: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 1200px) { .chat-list { padding: 20px 5%; } }
+        @media (max-width: 768px) { .chat-list { padding: 80px 15px 120px 15px; } }
+
+        .msg { display: flex; gap: 16px; width: 100%; animation: fadeIn 0.4s ease; }
         .msg.user { flex-direction: row-reverse; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #334155; flex-shrink: 0; font-size: 18px; }
-        .user .avatar { background: var(--primary); }
-        .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; background: #334155; font-size: 15px; line-height: 1.5; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .user .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .ai .bubble { border: 1px solid #475569; border-bottom-left-radius: 4px; width: fit-content; }
 
-        /* BADGE COLORS */
-        .badge { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
-        .badge-blue { color: #60a5fa; } .badge-yellow { color: #facc15; }
+        .avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .ai .avatar { background: var(--bg-panel); border: 1px solid var(--border); color: var(--primary); }
+        .user .avatar { background: var(--bg-bubble-user); color: white; }
 
-        /* INPUT AREA */
-        .input-container { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; padding: 0 20px; z-index: 50; }
-        .input-box { width: 100%; max-width: 800px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; display: flex; align-items: flex-end; padding: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); gap: 8px; transition: all 0.3s ease; }
-        .input-box:focus-within { border-color: var(--primary); }
-        textarea { flex: 1; background: transparent; border: none; color: white; padding: 10px 5px; font-size: 16px; line-height: 20px; resize: none; height: 40px; max-height: 120px; font-family: inherit; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; color: #94a3b8; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
-        .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
-        .send-btn { background: var(--primary); color: white; }
-        .send-btn:hover { background: #4f46e5; }
+        .bubble {
+            max-width: 85%;
+            padding: 0; /* Padding handled inside inner divs */
+            border-radius: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
 
-        /* FILE MANAGER STYLES (NEW) */
-        .file-list { margin-top: 15px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
-        .file-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px; margin-bottom: 8px; 
-            background: #0f172a; border: 1px solid #334155; border-radius: 10px; 
+        .user .bubble {
+            background: var(--bg-bubble-user);
+            color: white;
+            padding: 12px 18px;
+            border-bottom-right-radius: 4px;
+        }
+
+     .ai .bubble {
+    background: var(--bg-bubble-ai);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    width: fit-content; /* <--- Mới: Tự động co giãn theo nội dung */
+    max-width: 100%;
+}
+        /* --- 4. MARKDOWN STYLING (QUAN TRỌNG: Làm đẹp nội dung AI) --- */
+        .ai-header {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .md-content {
+            padding: 20px 25px;
+            color: #cbd5e1;
+        }
+
+        /* Typography Hierarchy */
+        .md-content h1, .md-content h2 {
+            font-size: 1.4rem; /* To hơn hẳn */
+            font-weight: 700;
+            color: #fff;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+        }
+        .md-content h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .md-content p {
+            font-size: 1rem; /* Nội dung nhỏ hơn tiêu đề */
+            line-height: 1.7; /* Dễ đọc */
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+        
+        /* Lists */
+        .md-content ul, .md-content ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+        .md-content li { margin-bottom: 0.5rem; line-height: 1.6; }
+        .md-content li::marker { color: var(--primary); font-weight: bold; }
+
+        /* Tables */
+        .md-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+        .md-content th { background: #334155; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        .md-content td { padding: 12px; border-bottom: 1px solid #334155; color: #cbd5e1; }
+        .md-content tr:last-child td { border-bottom: none; }
+
+        /* Code Block */
+        .md-content pre {
+            background: #020617;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .md-content code { font-family: 'Consolas', monospace; color: #f472b6; }
+
+        /* --- 5. INPUT AREA --- */
+        .input-container {
+            position: absolute; bottom: 25px; left: 0; right: 0;
+            display: flex; justify-content: center;
+            padding: 0 20px; z-index: 50;
+        }
+        .input-box {
+            width: 100%; max-width: 850px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex; align-items: flex-end;
+            padding: 10px 12px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        .input-box:focus-within {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+        textarea {
+            flex: 1; background: transparent; border: none; color: white;
+            padding: 12px 5px; font-size: 16px; line-height: 24px;
+            resize: none; height: 48px; max-height: 150px;
+            font-family: inherit;
+        }
+        textarea::placeholder { color: #64748b; }
+        
+        .icon-btn {
+            width: 44px; height: 44px; border-radius: 14px;
+            border: none; background: transparent;
+            color: #94a3b8; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; flex-shrink: 0;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
+        .send-btn { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .send-btn:hover { background: var(--primary-hover); transform: translateY(-2px); color: white; }
+
+        /* --- 6. COMPONENTS --- */
+        /* Badges */
+        .badge { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-blue { color: #60a5fa; background: rgba(96, 165, 250, 0.1); padding: 4px 10px; border-radius: 6px; }
+        .badge-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); padding: 4px 10px; border-radius: 6px; }
+
+        /* Auth Screen */
+        #authScreen {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-box {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px; border-radius: 24px;
+            width: 100%; max-width: 400px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .input-field {
+            width: 100%; padding: 14px 16px; margin: 8px 0;
+            background: #020617; border: 1px solid var(--border);
+            color: white; border-radius: 12px; font-size: 15px;
             transition: 0.2s;
         }
-        .file-item:hover { border-color: #475569; background: #151f32; }
-        .file-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
-        .file-icon { color: var(--primary); font-size: 18px; flex-shrink: 0; }
-        .file-text { display: flex; flex-direction: column; overflow: hidden; }
-        .file-name { font-size: 14px; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .file-meta { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; }
-        .delete-btn { 
-            color: #ef4444; cursor: pointer; padding: 5px 8px; 
-            border-radius: 6px; transition: 0.2s; 
+        .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        .btn-primary {
+            width: 100%; padding: 14px; margin-top: 20px;
+            background: var(--primary); color: white; border: none;
+            border-radius: 12px; font-weight: 600; font-size: 16px;
+            cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-        .delete-btn:hover { background: rgba(239, 68, 68, 0.1); }
+        .btn-primary:active { transform: scale(0.98); }
 
-        /* MARKDOWN */
-        .md-content table { display: block; overflow-x: auto; white-space: nowrap; margin: 10px 0; border: 1px solid #475569; border-radius: 8px; }
-        .md-content th, .md-content td { padding: 10px; border: 1px solid #475569; }
-        .md-content th { background: #0f172a; }
+        /* Sidebar Elements */
+        .sidebar-item {
+            padding: 12px 16px; border-radius: 12px;
+            margin-bottom: 8px; cursor: pointer;
+            font-weight: 500; display: flex; align-items: center; gap: 12px;
+            transition: 0.2s; color: #cbd5e1;
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .sidebar-item.highlight { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); }
 
-        /* MOBILE RESPONSIVE */
+        /* Subject Bar */
+        .subject-bar-wrapper {
+            padding: 15px 20px; display: flex; gap: 10px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .btn-sub {
+            padding: 8px 18px; border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent; color: var(--text-sub);
+            cursor: pointer; white-space: nowrap; transition: 0.2s;
+            font-size: 13px; font-weight: 600;
+        }
+        .btn-sub:hover { background: rgba(255,255,255,0.05); color: white; }
+        .btn-sub.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* --- MOBILE --- */
         .mobile-header { display: none; }
         .sidebar-overlay { display: none; }
-
+        
         @media (max-width: 768px) {
-            .mobile-header { display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; height: 60px; padding: 0 15px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #334155; z-index: 1000; }
-            .sidebar { position: fixed; inset: 0; width: 80%; max-width: 300px; transform: translateX(-100%); box-shadow: 10px 0 30px rgba(0,0,0,0.5); z-index: 2000; }
+            .mobile-header {
+                display: flex; align-items: center; justify-content: space-between;
+                position: fixed; top: 0; left: 0; right: 0; height: 60px;
+                padding: 0 15px; background: rgba(15, 23, 42, 0.9);
+                backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+                z-index: 1000;
+            }
+            .sidebar { position: fixed; inset: 0; width: 85%; max-width: 320px; transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
-            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1500; backdrop-filter: blur(2px); }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; backdrop-filter: blur(4px); }
             .sidebar-overlay.active { display: block; }
-            .chat-list { padding-top: 80px; padding-bottom: 100px; padding-left: 15px; padding-right: 15px; }
-            .bubble { max-width: 90%; font-size: 15px; }
-            .input-container { bottom: 10px; padding: 0 10px; }
-            .input-box { border-radius: 25px; padding: 6px 10px; }
             .subject-bar-wrapper { margin-top: 60px; }
+            .input-container { bottom: 15px; padding: 0 10px; }
+            .input-box { border-radius: 20px; }
         }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Modal File List */
+        .file-list { margin-top: 15px; max-height: 250px; overflow-y: auto; }
+        .file-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; margin-bottom: 10px;
+            background: #020617; border: 1px solid var(--border); border-radius: 10px;
+            transition: 0.2s;
+        }
+        .file-item:hover { border-color: #64748b; }
+        .file-name { font-weight: 500; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div id="authScreen">
         <div class="auth-box">
-            <h2 style="color:var(--primary); margin-bottom:15px; font-size: 24px;"><i class="fa-solid fa-graduation-cap"></i> Học Cùng AI</h2>
+            <div style="width:60px; height:60px; background:linear-gradient(135deg, #6366f1, #4f46e5); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px; color:white; box-shadow:0 10px 20px rgba(99,102,241,0.4);">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2 style="color:white; margin-bottom:5px; font-size: 22px; font-weight:700;">Học Cùng AI</h2>
+            <p style="color:var(--text-sub); margin-bottom:25px; font-size:14px;">Trợ lý học tập thông minh</p>
+            
             <input id="u" class="input-field" placeholder="Tên đăng nhập">
             <input id="p" type="password" class="input-field" placeholder="Mật khẩu">
+            
             <div id="reg" style="display:none;">
                 <select id="role" class="input-field" onchange="toggleCode()">
                     <option value="student">Học sinh</option>
                     <option value="teacher">Giáo viên</option>
                 </select>
-                <input id="code" class="input-field" placeholder="Mã GV" style="display:none;">
+                <input id="code" class="input-field" placeholder="Mã Xác Thực (GV)" style="display:none;">
             </div>
-            <button class="btn-primary" onclick="auth()">Vào Lớp</button>
-            <p onclick="toggleReg()" style="margin-top:15px; color:#94a3b8; font-size:14px; cursor:pointer; text-decoration: underline;">Đăng nhập / Đăng ký</p>
+            
+            <button class="btn-primary" onclick="auth()">Vào Lớp Ngay</button>
+            <p onclick="toggleReg()" style="margin-top:20px; color:#cbd5e1; font-size:14px; cursor:pointer;">
+                <span style="text-decoration: underline;">Tạo tài khoản mới</span> hoặc Đăng nhập
+            </p>
         </div>
     </div>
 
     <div id="app">
         <div class="mobile-header">
-            <i class="fa-solid fa-bars" style="font-size:22px; color: #cbd5e1; padding: 10px;" onclick="toggleMenu()"></i>
-            <b style="color:var(--primary); font-size: 18px;">Học Cùng AI</b>
-            <div style="width: 40px;"></div> 
+            <button onclick="toggleMenu()" style="background:none; border:none; color:white; font-size:20px;"><i class="fa-solid fa-bars"></i></button>
+            <span style="font-weight:700; color:white;">Học Cùng AI</span>
+            <div style="width:20px;"></div>
         </div>
 
         <div class="sidebar-overlay" onclick="toggleMenu()"></div>
 
         <nav class="sidebar" id="sidebar">
-            <h3 style="color:var(--primary); margin-bottom:30px; font-size: 22px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-robot"></i> Học Cùng AI
+            <h3 style="color:white; margin-bottom:30px; font-size: 20px; font-weight:700; display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-robot" style="color:var(--primary);"></i> Học Cùng AI
             </h3>
-            <div style="padding:12px; background:rgba(99, 102, 241, 0.1); color: #818cf8; border-radius:10px; margin-bottom:10px; cursor:pointer; font-weight: 600; display:flex; align-items:center; gap:10px;" onclick="location.reload()">
-                <i class="fa-solid fa-comments"></i> Chat Mới
+            
+            <div class="sidebar-item highlight" onclick="location.reload()">
+                <i class="fa-solid fa-plus"></i> Cuộc trò chuyện mới
             </div>
-            <div id="btnUpload" style="padding:12px; border:1px dashed #64748b; border-radius:10px; color:#94a3b8; cursor:pointer; font-weight: 600; display:none; align-items:center; gap:10px;" onclick="openUpload(); toggleMenu();">
+            
+            <div id="btnUpload" class="sidebar-item" style="display:none;" onclick="openUpload(); toggleMenu();">
                 <i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu
             </div>
-            <div style="margin-top:auto; padding-top:20px; border-top:1px solid #334155; display:flex; justify-content:space-between; align-items: center;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <div style="width:30px; height:30px; background:#475569; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-user"></i></div>
-                    <span id="uName" style="color: white; font-weight: 600;">User</span>
+
+            <div style="margin-top:auto;">
+                <div style="padding:16px; background:#0f172a; border-radius:16px; border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:36px; height:36px; background:var(--primary); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                        <div style="display:flex; flex-direction:column;">
+                            <span id="uName" style="color:white; font-weight:600; font-size:14px;">User</span>
+                            <span id="uRole" style="color:#64748b; font-size:11px; text-transform:uppercase;">Student</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--danger); cursor:pointer;" onclick="logout()" title="Đăng xuất"></i>
                 </div>
-                <i class="fa-solid fa-right-from-bracket" style="color:#ef4444; cursor:pointer; font-size: 20px; padding:10px;" onclick="logout()" title="Đăng xuất"></i>
             </div>
         </nav>
 
         <main class="main">
-            <div class="subject-bar-wrapper" style="padding:15px 20px; display:flex; gap:10px; overflow-x:auto; -webkit-overflow-scrolling: touch;">
-                <button class="btn-sub active" onclick="sub('general',this)">Chung</button>
-                <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
-                <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
-                <button class="btn-sub" onclick="sub('math',this)">Toán</button>
+            <div class="subject-bar-wrapper">
+                <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
+                <button class="btn-sub" onclick="sub('math',this)">Toán Học</button>
                 <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
-                <style>
-                    .btn-sub{padding:8px 16px; border-radius:20px; border:1px solid #475569; background:#1e293b; color:#94a3b8; cursor:pointer; white-space:nowrap; transition: 0.2s; font-size: 13px; font-weight: 600; flex-shrink: 0;} 
-                    .btn-sub:hover { background: #334155; }
-                    .btn-sub.active{background:var(--primary); color:white; border-color:var(--primary); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);}
-                </style>
+                <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
+                <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
+                <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
             </div>
 
             <div id="chat" class="chat-list">
-                <div style="text-align:center; margin-top:60px; color:#64748b;">
-                    <div style="width: 80px; height: 80px; background: #1e293b; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #6366f1; border: 1px solid #334155;">
+                <div style="text-align:center; margin-top:80px; opacity:0.8;">
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
-                    <h3 style="color: #94a3b8; margin-bottom: 5px;">Xin chào!</h3>
-                    <p style="font-size: 14px;">Chọn môn học và bắt đầu câu hỏi.</p>
+                    <h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2>
+                    <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">
+                        Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.
+                    </p>
                 </div>
             </div>
 
             <div class="input-container">
                 <div class="input-box">
-                    <button class="icon-btn" onclick="openUpload()" title="Tải file">
+                    <button class="icon-btn" onclick="openUpload()" title="Tải file đính kèm">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
-                    <textarea id="prompt" placeholder="Nhập câu hỏi..." oninput="autoResize(this)"></textarea>
+                    <textarea id="prompt" placeholder="Nhập câu hỏi của bạn tại đây..." oninput="autoResize(this)"></textarea>
                     <button class="icon-btn send-btn" onclick="send()">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
@@ -187,44 +439,42 @@
         </main>
     </div>
 
-    <div id="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter: blur(5px); padding: 20px;">
-        <div class="auth-box" style="width:100%; max-width:450px; text-align:left; display:flex; flex-direction:column; max-height:85vh;">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 15px; align-items: center;">
-                <h3 style="color: var(--primary); margin: 0;"><i class="fa-solid fa-folder-open"></i> Quản Lý Tài Liệu</h3>
-                <i class="fa-solid fa-xmark" onclick="document.getElementById('modal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 22px; padding: 5px;"></i>
+    <div id="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter: blur(8px); padding: 20px;">
+        <div class="auth-box" style="width:100%; max-width:500px; text-align:left; display:flex; flex-direction:column; max-height:85vh; padding: 25px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 20px; align-items: center; padding-bottom:15px; border-bottom:1px solid var(--border);">
+                <h3 style="color: white; margin: 0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-database"></i> Kho Tài Liệu</h3>
+                <i class="fa-solid fa-xmark" onclick="document.getElementById('modal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 24px; transition:0.2s;"></i>
             </div>
             
-            <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px dashed #475569; margin-bottom: 20px;">
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <select id="upSub" class="input-field" style="margin:0; flex:1; font-size:14px; padding:10px;">
+            <div style="background: #0f172a; padding: 20px; border-radius: 16px; border: 1px dashed var(--border); margin-bottom: 25px;">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <select id="upSub" class="input-field" style="margin:0; flex:1; cursor:pointer;">
                         <option value="general">Kiến thức chung</option>
-                        <option value="geography">Địa Lý</option>
-                        <option value="history">Lịch Sử</option>
                         <option value="math">Toán Học</option>
                         <option value="literature">Ngữ Văn</option>
+                        <option value="history">Lịch Sử</option>
                     </select>
-                    <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:10px; width:50px; cursor:pointer;"><i class="fa-solid fa-folder-plus"></i></button>
+                    <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:12px; width:50px; cursor:pointer; transition:0.2s;"><i class="fa-solid fa-folder-plus"></i></button>
                 </div>
                 
                 <input type="file" id="file" style="display: none;" onchange="document.getElementById('fileName').innerText = this.files[0]?.name || 'Chưa chọn file'">
                 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span id="fileName" style="font-size:12px; color:#94a3b8; font-style:italic; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Chưa chọn file...</span>
-                    <button onclick="doUpload()" style="background:var(--primary); color:white; border:none; padding:6px 15px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">Tải lên</button>
+                    <span id="fileName" style="font-size:13px; color:#cbd5e1; font-style:italic; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"> <i class="fa-solid fa-arrow-up"></i> Chọn file để tải lên...</span>
+                    <button onclick="doUpload()" style="background:var(--primary); color:white; border:none; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(99,102,241,0.3);">Upload</button>
                 </div>
-                <p id="stt" style="margin-top:8px; font-size:12px; font-weight:600; color:var(--primary); min-height:18px; text-align:center;"></p>
+                <p id="stt" style="margin-top:10px; font-size:13px; font-weight:600; color:var(--primary); min-height:20px; text-align:center;"></p>
             </div>
 
-            <h4 style="color:#cbd5e1; font-size:14px; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Danh sách đã tải:</h4>
-            <div id="fileListContainer" class="file-list">
-                </div>
+            <h4 style="color:#94a3b8; font-size:12px; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">File hiện có:</h4>
+            <div id="fileListContainer" class="file-list"></div>
         </div>
     </div>
 
     <script>
         let currUser=null, currSub='general', isReg=false;
         
-        function autoResize(el) { el.style.height='40px'; el.style.height=Math.min(el.scrollHeight,140)+'px'; }
+        function autoResize(el) { el.style.height='48px'; el.style.height=Math.min(el.scrollHeight,150)+'px'; }
         
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
         function toggleReg() { isReg=!isReg; document.getElementById('reg').style.display=isReg?'block':'none'; }
@@ -240,14 +490,36 @@
                 if(d.success) { if(isReg){alert('Đăng ký xong! Mời đăng nhập.');toggleReg();} else login(d.user); } else alert(d.error);
             } catch { alert('Lỗi mạng'); }
         }
-        function login(u) { currUser=u; localStorage.setItem('u',JSON.stringify(u)); document.getElementById('authScreen').style.display='none'; document.getElementById('app').style.display='flex'; document.getElementById('uName').innerText=u.username; if(u.role==='teacher') document.getElementById('btnUpload').style.display='flex'; }
+
+        // --- HÀM LOGIN ĐÃ ĐƯỢC SỬA ---
+        function login(u) { 
+            currUser=u; 
+            localStorage.setItem('u',JSON.stringify(u)); 
+            document.getElementById('authScreen').style.display='none'; 
+            document.getElementById('app').style.display='flex'; 
+            
+            // Set tên
+            document.getElementById('uName').innerText=u.username; 
+            
+            // LOGIC MỚI: Set chữ Teacher/Student
+            const roleText = u.role === 'teacher' ? 'Teacher' : 'Student';
+            document.getElementById('uRole').innerText = roleText;
+
+            // Ẩn hiện nút upload
+            if(u.role==='teacher') {
+                document.getElementById('btnUpload').style.display='flex'; 
+            } else {
+                document.getElementById('btnUpload').style.display='none'; 
+            }
+        }
+
         function logout() { localStorage.removeItem('u'); location.reload(); }
         window.onload=()=>{ if(localStorage.getItem('u')) login(JSON.parse(localStorage.getItem('u'))); }
 
         function sub(s, el) { 
             currSub=s; document.querySelectorAll('.btn-sub').forEach(b=>b.classList.remove('active')); el.classList.add('active'); 
             el.scrollIntoView({behavior: "smooth", inline: "center"});
-            document.getElementById('chat').innerHTML+=`<div style="text-align:center; font-size:12px; color:#64748b; margin:15px 0;"><span style="background:#1e293b; padding:4px 12px; border-radius:12px; border:1px solid #334155;">Chuyển sang: ${s.toUpperCase()}</span></div>`; 
+            document.getElementById('chat').innerHTML+=`<div style="text-align:center; font-size:12px; color:#64748b; margin:20px 0;"><span style="background:#1e293b; padding:6px 16px; border-radius:20px; border:1px solid #334155;">Đã chuyển chủ đề: ${s.toUpperCase()}</span></div>`; 
             const chat=document.getElementById('chat'); chat.scrollTop=chat.scrollHeight;
         }
 
@@ -256,10 +528,10 @@
             const chat=document.getElementById('chat');
             
             chat.innerHTML+=`<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${txt}</div></div>`;
-            el.value=''; autoResize(el); chat.scrollTop=chat.scrollHeight;
+            el.value=''; el.style.height='48px'; chat.scrollTop=chat.scrollHeight;
 
             const loadId = 'ld'+Date.now();
-            chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="color:#94a3b8; font-style:italic;"><i class="fa-solid fa-pen-nib fa-bounce"></i> Đang soạn bài...</div></div>`;
+            chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="padding:15px; color:#94a3b8; font-style:italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang suy nghĩ...</div></div>`;
             chat.scrollTop=chat.scrollHeight;
 
             try {
@@ -269,16 +541,16 @@
                 
                 let headerHTML = '';
                 if(d.isFallback) {
-                    headerHTML = `<span class="badge badge-yellow"><i class="fa-solid fa-triangle-exclamation"></i> Tài Liệu Ngoài</span>`;
+                    headerHTML = `<span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span>`;
                 } else {
-                    headerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-book-open"></i> Sách Giáo Khoa</span>`;
+                    headerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Sách Giáo Khoa</span>`;
                 }
                 
                 let html = `
                 <div class="msg ai">
                     <div class="avatar"><i class="fa-solid fa-robot"></i></div>
                     <div class="bubble">
-                        <div style="border-bottom:1px solid #475569; padding-bottom:6px; margin-bottom:8px; display:flex;">
+                        <div class="ai-header">
                             ${headerHTML}
                         </div>
                         <div class="md-content">${marked.parse(d.answer)}</div>
@@ -288,7 +560,7 @@
                 chat.innerHTML+=html;
                 renderMathInElement(chat, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
                 chat.scrollTop=chat.scrollHeight;
-            } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444">Lỗi kết nối!</span>'; }
+            } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444; padding:10px;">Lỗi kết nối server!</span>'; }
         }
 
         // --- FILE MANAGER LOGIC ---
@@ -300,23 +572,22 @@
             const container = document.getElementById('fileListContainer');
             
             if(files.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px;">Chưa có tài liệu nào.</div>';
+                container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>';
                 return;
             }
 
             container.innerHTML = files.map(f => {
-                // Chỉ hiện nút xóa nếu là Teacher
                 const delBtn = (currUser && currUser.role === 'teacher') 
-                    ? `<i class="fa-solid fa-trash delete-btn" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` 
+                    ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` 
                     : '';
                 
                 return `
                 <div class="file-item">
-                    <div class="file-info">
-                        <div class="file-icon"><i class="fa-regular fa-file-lines"></i></div>
-                        <div class="file-text">
-                            <span class="file-name">${f.name}</span>
-                            <span class="file-meta">${f.subject}</span>
+                    <div style="display:flex; align-items:center; gap:12px; overflow:hidden;">
+                        <div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div style="display:flex; flex-direction:column; overflow:hidden;">
+                            <span class="file-name" style="color:#f1f5f9;">${f.name}</span>
+                            <span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span>
                         </div>
                     </div>
                     ${delBtn}
@@ -329,29 +600,29 @@
                 try {
                     await fetch('/delete-file', {
                         method:'POST', 
-                        headers:{'role': currUser.role, 'Content-Type':'application/json'}, // Gửi role động
+                        headers:{'role': currUser.role, 'Content-Type':'application/json'},
                         body:JSON.stringify({filename:n})
                     }); 
-                    loadFiles(); // Refresh list
+                    loadFiles();
                 } catch { alert("Lỗi khi xóa!"); }
             } 
         }
 
         async function doUpload() {
-            const f=document.getElementById('file').files[0]; if(!f)return alert('Chọn file!');
+            const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!');
             const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);
             
             const stt = document.getElementById('stt');
-            stt.innerText='Đang tải lên & đọc file...'; stt.style.color='#f59e0b';
+            stt.innerText='Đang tải lên & xử lý vector...'; stt.style.color='#f59e0b';
             
             try { 
                 const r=await fetch('/upload-doc',{method:'POST',body:fd}); 
                 const d=await r.json(); 
                 if(d.success) {
-                    stt.innerText='Thành công!'; stt.style.color='#10b981';
-                    document.getElementById('file').value = ''; // Reset input
+                    stt.innerText='Upload thành công!'; stt.style.color='#10b981';
+                    document.getElementById('file').value = '';
                     document.getElementById('fileName').innerText = 'Chưa chọn file...';
-                    loadFiles(); // Refresh list
+                    loadFiles();
                 } else {
                     stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444';
                 }
