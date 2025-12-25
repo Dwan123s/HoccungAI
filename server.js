@@ -7,31 +7,24 @@ const cors = require('cors');
 const fs = require('fs');
 const multer = require('multer');
 const mammoth = require('mammoth'); 
-const path = require('path'); // Thêm thư viện xử lý đường dẫn
+const path = require('path'); 
 
+// --- FIX LỖI THƯ VIỆN PDF ---
 let pdfParse = require('pdf-parse');
 if (typeof pdfParse !== 'function' && pdfParse.default) {
     pdfParse = pdfParse.default;
 }
 
-// --- TỰ ĐỘNG TẠO THƯ MỤC UPLOADS (FIX LỖI UPLOAD) ---
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
-
-const MY_API_KEY = process.env.GOOGLE_API_KEY; 
-const TEACHER_SECRET_CODE = process.env.TEACHER_SECRET; 
-const PORT = process.env.PORT || 3000;
-
-// Fallback nếu quên cấu hình env trên máy local (để demo chạy được ngay)
-if (!MY_API_KEY) {
-    console.warn("⚠️ CẢNH BÁO: Chưa có API Key trong .env hoặc Environment Variables!");
-}
-
 const app = express();
 
+// --- CẤU HÌNH UPLOADS ---
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) { cb(null, 'uploads/') },
+    destination: function (req, file, cb) { cb(null, UPLOAD_DIR) },
     filename: function (req, file, cb) { 
         const safeName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
         cb(null, Date.now() + '-' + safeName) 
@@ -41,12 +34,31 @@ const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static(__dirname)); 
 
-// --- FIX LỖI GIAO DIỆN (PHỤC VỤ FILE Ở ROOT) ---
-app.use(express.static('.')); 
+const TEACHER_SECRET_CODE = process.env.TEACHER_SECRET; 
+const PORT = process.env.PORT || 3000;
 
-const genAI = new GoogleGenerativeAI(MY_API_KEY);
+// ============================================================
+// 🔑 HỆ THỐNG KEY
+// ============================================================
+const allKeys = [
+    process.env.GOOGLE_API_KEY,
+    process.env.GOOGLE_API_KEY_2,
+    process.env.GOOGLE_API_KEY_3,
+    process.env.GOOGLE_API_KEY_4
+].filter(key => key);
 
+if (allKeys.length === 0) console.error("❌ LỖI: Không tìm thấy API Key!");
+
+function getGenAI() {
+    const randomKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+    return new GoogleGenerativeAI(randomKey);
+}
+
+// ============================================================
+// QUẢN LÝ DỮ LIỆU
+// ============================================================
 let vectorStore = []; 
 let users = [];
 
@@ -67,18 +79,21 @@ function splitTextIntoChunks(text, chunkSize = 1500) {
 }
 
 function loadData() {
-    if (fs.existsSync('knowledge.json')) {
-        try { vectorStore = JSON.parse(fs.readFileSync('knowledge.json', 'utf8')); } catch (e) { vectorStore = []; }
-    } else { fs.writeFileSync('knowledge.json', '[]'); }
+    const knowledgePath = path.join(__dirname, 'knowledge.json');
+    const usersPath = path.join(__dirname, 'users.json');
 
-    if (fs.existsSync('users.json')) {
-        try { users = JSON.parse(fs.readFileSync('users.json', 'utf8')); } catch (e) { users = []; }
-    } else { fs.writeFileSync('users.json', '[]'); }
-    console.log(`Server ready. Loaded ${vectorStore.length} items.`);
+    if (fs.existsSync(knowledgePath)) {
+        try { vectorStore = JSON.parse(fs.readFileSync(knowledgePath, 'utf8')); } catch (e) { vectorStore = []; }
+    } else { fs.writeFileSync(knowledgePath, '[]'); }
+
+    if (fs.existsSync(usersPath)) {
+        try { users = JSON.parse(fs.readFileSync(usersPath, 'utf8')); } catch (e) { users = []; }
+    } else { fs.writeFileSync(usersPath, '[]'); }
+    console.log(`✅ Server sẵn sàng. Đã tải ${vectorStore.length} đoạn dữ liệu.`);
 }
 
-function saveUsers() { fs.writeFileSync('users.json', JSON.stringify(users, null, 2)); }
-function saveKnowledge() { fs.writeFileSync('knowledge.json', JSON.stringify(vectorStore, null, 2)); }
+function saveUsers() { fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify(users, null, 2)); }
+function saveKnowledge() { fs.writeFileSync(path.join(__dirname, 'knowledge.json'), JSON.stringify(vectorStore, null, 2)); }
 
 function cosineSimilarity(vecA, vecB) {
     if (!vecA || !vecB) return 0;
@@ -93,10 +108,8 @@ function cosineSimilarity(vecA, vecB) {
 
 loadData();
 
-// ROUTE TRANG CHỦ (Quan trọng để Render hiển thị web)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// --- ROUTES ---
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
 app.post('/register', (req, res) => {
     const { username, password, role, secretCode } = req.body;
@@ -146,18 +159,17 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
 
     try {
         if (!req.file) throw new Error("Chưa chọn file!");
-        
+        const genAI = getGenAI();
         let content = "";
         const filePath = req.file.path;
         const mimeType = req.file.mimetype;
         const originalName = req.file.originalname.toLowerCase();
 
+        // 1. PDF (Có hỗ trợ OCR)
         if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
             const dataBuffer = fs.readFileSync(filePath);
-            if (typeof pdfParse !== 'function') throw new Error("Lỗi thư viện PDF.");
             const pdfData = await pdfParse(dataBuffer);
             content = pdfData.text;
-
             if (!content || content.trim().length < 50) {
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 const result = await model.generateContent([
@@ -167,105 +179,106 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
                 content = result.response.text();
             }
         } 
+        // 2. WORD (Giữ HTML bảng)
         else if (mimeType.includes('word') || originalName.endsWith('.docx')) {
             const result = await mammoth.convertToHtml({ path: filePath });
             content = result.value; 
-        } 
-        else {
+        } else {
             content = fs.readFileSync(filePath, 'utf8');
         }
 
         if (!content || content.length < 20) throw new Error("File rỗng!");
 
-        let textChunks = [];
-        if (content.includes("<table")) {
-             textChunks = [content]; 
-        } else {
-            content = content.replace(/[ \t]+/g, " ").trim(); 
-            textChunks = splitTextIntoChunks(content, 1000);
-        }
+        let textChunks = content.includes("<table") ? [content] : splitTextIntoChunks(content.replace(/[ \t]+/g, " ").trim(), 1000);
         
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
         for (const chunk of textChunks) {
             const result = await embedModel.embedContent(chunk);
-            vectorStore.push({ 
-                content: chunk, 
-                vector: result.embedding.values, 
-                source: req.file.originalname,
-                subject: subject 
-            });
+            vectorStore.push({ content: chunk, vector: result.embedding.values, source: req.file.originalname, subject: subject });
         }
         saveKnowledge();
         fs.unlinkSync(filePath); 
-        res.json({ success: true, message: `Success: ${req.file.originalname}` });
-
+        res.json({ success: true, message: `Đã học: ${req.file.originalname}` });
     } catch (error) {
-        console.error(error);
+        console.error("Lỗi upload:", error);
         if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-const TEACHER_PROMPT = `
-Bạn là một Trợ lý AI đặc biệt của nhà trường.
+// ============================================================
+// 🧠 PHẦN XỬ LÝ AI TRẢ LỜI (LOGIC MỚI: LUÔN GỬI TÀI LIỆU)
+// ============================================================
 
-⛔ LUẬT BẤT KHẢ XÂM PHẠM:
-1. **DỮ LIỆU LÀ CHÂN LÝ:** Bạn PHẢI trả lời dựa hoàn toàn vào phần "DỮ LIỆU THAM KHẢO" bên dưới.
-2. **QUÊN ĐI THỰC TẾ:** Nếu tài liệu nói A, thực tế là B -> BẮT BUỘC TRẢ LỜI LÀ A.
-   - Ví dụ: Tài liệu nói "Việt Nam có 34 tỉnh"-> BẠN PHẢI TRẢ LỜI LÀ 34 TỈNH.
-3. **ƯU TIÊN CỘT 'CẬP NHẬT':** Nếu trong tài liệu có bảng so sánh, hãy luôn lấy thông tin ở cột "NỘI DUNG CẬP NHẬT".
+// ... (Các phần import và config ở trên giữ nguyên)
 
-YÊU CẦU TRÌNH BÀY:
-- Dùng Markdown.
-- Trích xuất chính xác con số trong bảng HTML.
-`;
+// ============================================================
+// 🧠 PHẦN XỬ LÝ AI TRẢ LỜI (ĐÃ TỐI ƯU PROMPT ĐỂ TRÌNH BÀY ĐẸP)
+// ============================================================
 
 app.post('/ask-ai', async (req, res) => {
     try {
         const { prompt, subject } = req.body;
         
+        // 1. Lọc tài liệu theo môn
         const relevantDocs = vectorStore.filter(doc => doc.subject === subject);
         const docsToSearch = relevantDocs.length > 0 ? relevantDocs : vectorStore;
 
         if (docsToSearch.length === 0) {
-             return res.json({ success: true, answer: `⚠️ Chưa có tài liệu nào trong hệ thống.`, isFallback: true });
+             return res.json({ success: true, answer: `⚠️ **Chưa có dữ liệu!**\n\nHệ thống chưa có tài liệu nào cho môn này. Vui lòng tải lên tài liệu để bắt đầu.`, isFallback: true });
         }
 
+        const genAI = getGenAI();
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
         const queryVector = (await embedModel.embedContent(prompt)).embedding.values;
 
+        // 2. Tính điểm
         const scoredDocs = docsToSearch.map(doc => ({ ...doc, score: cosineSimilarity(queryVector, doc.vector) }));
         scoredDocs.sort((a, b) => b.score - a.score);
-        const topMatches = scoredDocs.slice(0, 3);
-        const bestScore = topMatches.length > 0 ? topMatches[0].score : 0;
-
+        
+        const topMatches = scoredDocs.slice(0, 5); 
         const contextContent = topMatches.map(m => `--- Nguồn: ${m.source} ---\n${m.content}`).join("\n\n");
 
-        const THRESHOLD = 0.35;
-        const isFallback = bestScore < THRESHOLD;
-        let systemInstruction = TEACHER_PROMPT;
+        // 3. Prompt Cực Mạnh để xử lý Layout
+        const systemInstruction = `
+        Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
+        
+        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO".
 
-        if (isFallback) {
-            systemInstruction = `Bạn là Giáo viên. Thông tin học sinh hỏi KHÔNG CÓ trong tài liệu. Hãy trả lời bằng kiến thức bổ trợ và CẢNH BÁO học sinh: "⚠️ Nội dung này chưa có trong tài liệu trường."`;
-        } else {
-            systemInstruction += `\n\n✅ **DỮ LIỆU THAM KHẢO (ĐÂY LÀ CHÂN LÝ, HÃY LÀM THEO):**\n${contextContent}`;
-        }
+        DỮ LIỆU THAM KHẢO:
+        ${contextContent}
 
+        ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
+        1. **Bố cục rõ ràng:** Chia câu trả lời thành các đoạn nhỏ, dễ đọc. Sử dụng các tiêu đề (Heading) nếu câu trả lời dài.
+        2. **Highlight từ khóa:** BẮT BUỘC phải **in đậm** (dùng **text**) các con số, tên riêng, định nghĩa quan trọng hoặc kết quả chính.
+        3. **Dùng danh sách:** Sử dụng gạch đầu dòng (bullet points) cho các ý liệt kê để dễ nhìn.
+        4. **Bảng biểu:** Nếu dữ liệu có tính so sánh, hãy trình bày dưới dạng Bảng (Table).
+
+        ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
+        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích.
+        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên.
+        `;
+
+        // 4. Gọi Model
         const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash", 
             systemInstruction: systemInstruction 
         });
 
         const result = await model.generateContent(prompt);
-        const response = await result.response;
+        const responseText = result.response.text();
         
-        res.json({ success: true, answer: response.text(), isFallback });
+        const isFallback = responseText.includes("⚠️");
+
+        res.json({ success: true, answer: responseText, isFallback: isFallback });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: "Lỗi Server!" });
     }
 });
+
+// ... (Phần listen giữ nguyên)
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
