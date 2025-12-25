@@ -5,20 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Học Cùng AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        :root { --bg: #0f172a; --panel: #1e293b; --primary: #6366f1; --text: #f8fafc; }
+        :root { --bg: #0f172a; --panel: #1e293b; --primary: #6366f1; --text: #f8fafc; --danger: #ef4444; }
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
         
         /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 5px; display: none; }
-        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+
         /* AUTH SCREEN */
         #authScreen { position: fixed; inset: 0; background: rgba(15,23,42,0.98); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: var(--panel); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
@@ -37,52 +38,15 @@
         /* MESSAGE BUBBLES */
         .msg { display: flex; gap: 10px; width: 100%; animation: fadeIn 0.3s ease; }
         .msg.user { flex-direction: row-reverse; }
-        
         .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #334155; flex-shrink: 0; font-size: 18px; }
         .user .avatar { background: var(--primary); }
-        
-        .bubble { 
-            max-width: 85%; padding: 16px 20px; border-radius: 18px; 
-            background: #334155; font-size: 15px; line-height: 1.6; position: relative; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-        }
+        .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; background: #334155; font-size: 15px; line-height: 1.5; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .user .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .ai .bubble { border: 1px solid #475569; border-bottom-left-radius: 4px; width: fit-content; min-width: 200px; }
+        .ai .bubble { border: 1px solid #475569; border-bottom-left-radius: 4px; width: fit-content; }
 
-        /* --- MARKDOWN STYLING (ĐÃ BỎ HIGHLIGHT NỀN) --- */
-        .md-content { color: #e2e8f0; }
-        
-        /* Chỉ đổi màu chữ và in đậm, không nền */
-        .md-content strong { 
-            color: #818cf8; /* Màu tím nhạt chủ đạo */
-            font-weight: 800;
-        }
-        
-        .md-content h1, .md-content h2, .md-content h3 { color: white; margin-top: 15px; margin-bottom: 8px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-        .md-content h3 { font-size: 16px; border: none; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; }
-        .md-content ul, .md-content ol { padding-left: 20px; margin-bottom: 10px; }
-        .md-content li { margin-bottom: 6px; }
-        
-        /* Bảng biểu */
-        .md-content table { 
-            width: 100%; border-collapse: collapse; margin: 15px 0; 
-            border: 1px solid #475569; border-radius: 8px; overflow: hidden; display: block; overflow-x: auto;
-        }
-        .md-content th { background: #1e293b; color: #818cf8; padding: 12px; text-align: left; border-bottom: 2px solid #475569; white-space: nowrap; }
-        .md-content td { padding: 10px 12px; border-bottom: 1px solid #334155; background: rgba(30, 41, 59, 0.3); }
-        .md-content tr:last-child td { border-bottom: none; }
-
-        .md-content blockquote {
-            border-left: 4px solid var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-            padding: 8px 12px; margin: 10px 0;
-            border-radius: 0 8px 8px 0; color: #cbd5e1; font-style: italic;
-        }
-
-        /* --- BADGE COLORS (CHỈ CHỮ, KHÔNG NỀN) --- */
+        /* BADGE COLORS */
         .badge { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
-        .badge-blue { color: #60a5fa; /* Xanh Dương cho Sách GK */ } 
-        .badge-yellow { color: #facc15; /* Vàng cho Tài Liệu Ngoài */ }
+        .badge-blue { color: #60a5fa; } .badge-yellow { color: #facc15; }
 
         /* INPUT AREA */
         .input-container { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; padding: 0 20px; z-index: 50; }
@@ -93,6 +57,31 @@
         .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         .send-btn { background: var(--primary); color: white; }
         .send-btn:hover { background: #4f46e5; }
+
+        /* FILE MANAGER STYLES (NEW) */
+        .file-list { margin-top: 15px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
+        .file-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px; margin-bottom: 8px; 
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px; 
+            transition: 0.2s;
+        }
+        .file-item:hover { border-color: #475569; background: #151f32; }
+        .file-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .file-icon { color: var(--primary); font-size: 18px; flex-shrink: 0; }
+        .file-text { display: flex; flex-direction: column; overflow: hidden; }
+        .file-name { font-size: 14px; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+        .delete-btn { 
+            color: #ef4444; cursor: pointer; padding: 5px 8px; 
+            border-radius: 6px; transition: 0.2s; 
+        }
+        .delete-btn:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* MARKDOWN */
+        .md-content table { display: block; overflow-x: auto; white-space: nowrap; margin: 10px 0; border: 1px solid #475569; border-radius: 8px; }
+        .md-content th, .md-content td { padding: 10px; border: 1px solid #475569; }
+        .md-content th { background: #0f172a; }
 
         /* MOBILE RESPONSIVE */
         .mobile-header { display: none; }
@@ -135,7 +124,7 @@
     <div id="app">
         <div class="mobile-header">
             <i class="fa-solid fa-bars" style="font-size:22px; color: #cbd5e1; padding: 10px;" onclick="toggleMenu()"></i>
-            <b style="color:var(--primary); font-size: 18px;">Học Cùng AI</b>
+            <b style="color:var(--primary); font-size: 18px;">Lớp Học Thông Minh</b>
             <div style="width: 40px;"></div> 
         </div>
 
@@ -143,13 +132,13 @@
 
         <nav class="sidebar" id="sidebar">
             <h3 style="color:var(--primary); margin-bottom:30px; font-size: 22px; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-robot"></i> Học Cùng AI
+                <i class="fa-solid fa-robot"></i> Menu
             </h3>
             <div style="padding:12px; background:rgba(99, 102, 241, 0.1); color: #818cf8; border-radius:10px; margin-bottom:10px; cursor:pointer; font-weight: 600; display:flex; align-items:center; gap:10px;" onclick="location.reload()">
                 <i class="fa-solid fa-comments"></i> Chat Mới
             </div>
             <div id="btnUpload" style="padding:12px; border:1px dashed #64748b; border-radius:10px; color:#94a3b8; cursor:pointer; font-weight: 600; display:none; align-items:center; gap:10px;" onclick="openUpload(); toggleMenu();">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Thêm Tài Liệu
+                <i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu
             </div>
             <div style="margin-top:auto; padding-top:20px; border-top:1px solid #334155; display:flex; justify-content:space-between; align-items: center;">
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -199,29 +188,36 @@
     </div>
 
     <div id="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter: blur(5px); padding: 20px;">
-        <div class="auth-box" style="width:100%; max-width:400px; text-align:left;">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 20px; align-items: center;">
-                <h3 style="color: var(--primary); margin: 0;">Upload Tài Liệu</h3>
-                <i class="fa-solid fa-xmark" onclick="document.getElementById('modal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 24px; padding: 5px;"></i>
+        <div class="auth-box" style="width:100%; max-width:450px; text-align:left; display:flex; flex-direction:column; max-height:85vh;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 15px; align-items: center;">
+                <h3 style="color: var(--primary); margin: 0;"><i class="fa-solid fa-folder-open"></i> Quản Lý Tài Liệu</h3>
+                <i class="fa-solid fa-xmark" onclick="document.getElementById('modal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 22px; padding: 5px;"></i>
             </div>
             
-            <select id="upSub" class="input-field" style="margin-bottom: 15px;">
-                <option value="general">Kiến thức chung</option>
-                <option value="geography">Địa Lý</option>
-                <option value="history">Lịch Sử</option>
-                <option value="math">Toán Học</option>
-                <option value="literature">Ngữ Văn</option>
-            </select>
-            
-            <div style="border: 2px dashed #475569; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; background: #0f172a;">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: #64748b; margin-bottom: 10px;"></i><br>
-                <input type="file" id="file" style="display: none;" onchange="document.getElementById('fileName').innerText = this.files[0]?.name || 'Chọn file...'">
-                <button onclick="document.getElementById('file').click()" style="background: #334155; border: 1px solid #475569; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">Chọn File</button>
-                <p id="fileName" style="margin-top: 10px; font-size: 12px; color: #94a3b8; font-style: italic;">(PDF, Word)</p>
+            <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px dashed #475569; margin-bottom: 20px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <select id="upSub" class="input-field" style="margin:0; flex:1; font-size:14px; padding:10px;">
+                        <option value="general">Kiến thức chung</option>
+                        <option value="geography">Địa Lý</option>
+                        <option value="history">Lịch Sử</option>
+                        <option value="math">Toán Học</option>
+                        <option value="literature">Ngữ Văn</option>
+                    </select>
+                    <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:10px; width:50px; cursor:pointer;"><i class="fa-solid fa-folder-plus"></i></button>
+                </div>
+                
+                <input type="file" id="file" style="display: none;" onchange="document.getElementById('fileName').innerText = this.files[0]?.name || 'Chưa chọn file'">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span id="fileName" style="font-size:12px; color:#94a3b8; font-style:italic; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Chưa chọn file...</span>
+                    <button onclick="doUpload()" style="background:var(--primary); color:white; border:none; padding:6px 15px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">Tải lên</button>
+                </div>
+                <p id="stt" style="margin-top:8px; font-size:12px; font-weight:600; color:var(--primary); min-height:18px; text-align:center;"></p>
             </div>
 
-            <button class="btn-primary" onclick="doUpload()">Bắt đầu Tải lên</button>
-            <p id="stt" style="margin-top:10px; font-size:13px; font-weight: 600; text-align: center; color: var(--primary); min-height: 20px;"></p>
+            <h4 style="color:#cbd5e1; font-size:14px; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Danh sách đã tải:</h4>
+            <div id="fileListContainer" class="file-list">
+                </div>
         </div>
     </div>
 
@@ -271,13 +267,10 @@
                 const d=await res.json();
                 document.getElementById(loadId).remove();
                 
-                // --- LOGIC MÀU SẮC (GIỮ NGUYÊN) ---
                 let headerHTML = '';
                 if(d.isFallback) {
-                    // Tài Liệu Ngoài -> Vàng
                     headerHTML = `<span class="badge badge-yellow"><i class="fa-solid fa-triangle-exclamation"></i> Tài Liệu Ngoài</span>`;
                 } else {
-                    // Sách Giáo Khoa -> Xanh Dương
                     headerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-book-open"></i> Sách Giáo Khoa</span>`;
                 }
                 
@@ -298,21 +291,69 @@
             } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444">Lỗi kết nối!</span>'; }
         }
 
-        function openUpload(){ document.getElementById('modal').style.display='flex'; }
+        // --- FILE MANAGER LOGIC ---
+        function openUpload(){ document.getElementById('modal').style.display='flex'; loadFiles(); }
+        
+        async function loadFiles() {
+            const res = await fetch('/list-files');
+            const files = await res.json();
+            const container = document.getElementById('fileListContainer');
+            
+            if(files.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px;">Chưa có tài liệu nào.</div>';
+                return;
+            }
+
+            container.innerHTML = files.map(f => {
+                // Chỉ hiện nút xóa nếu là Teacher
+                const delBtn = (currUser && currUser.role === 'teacher') 
+                    ? `<i class="fa-solid fa-trash delete-btn" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` 
+                    : '';
+                
+                return `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-icon"><i class="fa-regular fa-file-lines"></i></div>
+                        <div class="file-text">
+                            <span class="file-name">${f.name}</span>
+                            <span class="file-meta">${f.subject}</span>
+                        </div>
+                    </div>
+                    ${delBtn}
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteFile(n) { 
+            if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { 
+                try {
+                    await fetch('/delete-file', {
+                        method:'POST', 
+                        headers:{'role': currUser.role, 'Content-Type':'application/json'}, // Gửi role động
+                        body:JSON.stringify({filename:n})
+                    }); 
+                    loadFiles(); // Refresh list
+                } catch { alert("Lỗi khi xóa!"); }
+            } 
+        }
+
         async function doUpload() {
             const f=document.getElementById('file').files[0]; if(!f)return alert('Chọn file!');
             const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);
-            document.getElementById('stt').innerText='Đang tải lên...';
-            document.getElementById('stt').style.color='#f59e0b';
+            
+            const stt = document.getElementById('stt');
+            stt.innerText='Đang tải lên & đọc file...'; stt.style.color='#f59e0b';
+            
             try { 
                 const r=await fetch('/upload-doc',{method:'POST',body:fd}); 
                 const d=await r.json(); 
                 if(d.success) {
-                    document.getElementById('stt').innerText='Thành công!';
-                    document.getElementById('stt').style.color='#10b981';
+                    stt.innerText='Thành công!'; stt.style.color='#10b981';
+                    document.getElementById('file').value = ''; // Reset input
+                    document.getElementById('fileName').innerText = 'Chưa chọn file...';
+                    loadFiles(); // Refresh list
                 } else {
-                    document.getElementById('stt').innerText='Lỗi: ' + d.error;
-                    document.getElementById('stt').style.color='#ef4444';
+                    stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444';
                 }
             } catch{alert('Lỗi mạng');}
         }
