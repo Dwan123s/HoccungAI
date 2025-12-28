@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Học Cùng AI</title>
+    <title>Học Cùng AI - Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -12,7 +12,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        /* --- GIỮ NGUYÊN CSS CŨ --- */
         :root { --bg-body: #0f172a; --bg-panel: #1e293b; --bg-bubble-ai: #1e293b; --bg-bubble-user: #4f46e5; --primary: #6366f1; --primary-hover: #4338ca; --text-main: #f8fafc; --text-sub: #94a3b8; --border: #334155; --danger: #ef4444; --font-main: 'Inter', sans-serif; }
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font-main); background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; font-size: 15px; }
@@ -35,7 +34,6 @@
         .user .bubble { background: var(--bg-bubble-user); color: white; padding: 12px 18px; border-bottom-right-radius: 4px; }
         .ai .bubble { background: var(--bg-bubble-ai); border: 1px solid var(--border); border-bottom-left-radius: 4px; width: fit-content; max-width: 100%; }
         
-        /* CSS Markdown */
         .ai-header { background: rgba(15, 23, 42, 0.5); padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         .md-content { padding: 20px 25px; color: #cbd5e1; }
         .md-content h1, .md-content h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary); display: inline-block; }
@@ -47,11 +45,9 @@
         .md-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: #0f172a; border-radius: 8px; overflow: hidden; font-size: 0.95rem; }
         .md-content th { background: #334155; color: white; padding: 12px; text-align: left; font-weight: 600; }
         .md-content td { padding: 12px; border-bottom: 1px solid #334155; color: #cbd5e1; }
-        .md-content tr:last-child td { border-bottom: none; }
         .md-content pre { background: #020617; padding: 15px; border-radius: 8px; border: 1px solid #334155; overflow-x: auto; margin: 1rem 0; }
         .md-content code { font-family: 'Consolas', monospace; color: #f472b6; }
 
-        /* Input */
         .input-container { position: absolute; bottom: 25px; left: 0; right: 0; display: flex; justify-content: center; padding: 0 20px; z-index: 50; }
         .input-box { width: 100%; max-width: 850px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; display: flex; align-items: flex-end; padding: 10px 12px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); gap: 10px; transition: all 0.3s ease; }
         .input-box:focus-within { background: rgba(30, 41, 59, 0.9); border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3); }
@@ -62,7 +58,6 @@
         .send-btn { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
         .send-btn:hover { background: var(--primary-hover); transform: translateY(-2px); color: white; }
 
-        /* Auth & Sidebar */
         .badge { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
         .badge-blue { color: #60a5fa; background: rgba(96, 165, 250, 0.1); padding: 4px 10px; border-radius: 6px; }
         .badge-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); padding: 4px 10px; border-radius: 6px; }
@@ -78,44 +73,20 @@
         .sidebar-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .sidebar-item.highlight { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); }
 
-        /* --- CẬP NHẬT: CSS CHO LỊCH SỬ CHAT VÀ NÚT XÓA --- */
         #historyList { margin-top: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .history-item { 
-            padding: 10px 14px; 
-            border-radius: 8px; 
-            font-size: 13px; 
-            color: #94a3b8; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            display: flex; /* Dùng flex để dàn icon */
-            align-items: center; 
-            justify-content: space-between;
-            gap: 8px;
-        }
+        .history-item { padding: 10px 14px; border-radius: 8px; font-size: 13px; color: #94a3b8; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .history-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
         .history-item.active { background: rgba(99, 102, 241, 0.2); color: white; border-left: 3px solid var(--primary); }
-        
-        .history-title {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        .del-chat-btn {
-            opacity: 0; /* Mặc định ẩn */
-            color: #ef4444;
-            padding: 4px;
-            border-radius: 4px;
-            font-size: 12px;
-            transition: 0.2s;
-        }
+        .history-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; display: flex; align-items: center; gap: 8px; }
+        .del-chat-btn { opacity: 0; color: #ef4444; padding: 4px; border-radius: 4px; font-size: 12px; transition: 0.2s; }
         .del-chat-btn:hover { background: rgba(239, 68, 68, 0.2); }
-        .history-item:hover .del-chat-btn { opacity: 1; } /* Hiện khi hover vào dòng */
+        .history-item:hover .del-chat-btn { opacity: 1; }
 
-        /* Subject & Mobile */
         .subject-bar-wrapper { padding: 15px 20px; display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(15, 23, 42, 0.4); }
         .btn-sub { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-sub); cursor: pointer; white-space: nowrap; transition: 0.2s; font-size: 13px; font-weight: 600; }
         .btn-sub:hover { background: rgba(255,255,255,0.05); color: white; }
         .btn-sub.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        
         .mobile-header { display: none; }
         .sidebar-overlay { display: none; }
         @media (max-width: 768px) {
@@ -127,17 +98,29 @@
             .subject-bar-wrapper { margin-top: 60px; }
             .input-container { bottom: 15px; padding: 0 10px; }
             .input-box { border-radius: 20px; }
-            .del-chat-btn { opacity: 1; } /* Mobile luôn hiện nút xóa */
+            .del-chat-btn { opacity: 1; }
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .file-list { margin-top: 15px; max-height: 250px; overflow-y: auto; }
         .file-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; margin-bottom: 10px; background: #020617; border: 1px solid var(--border); border-radius: 10px; transition: 0.2s; }
         .file-item:hover { border-color: #64748b; }
         .file-name { font-weight: 500; font-size: 14px; }
+
+        /* --- CSS CHO QUIZ (ĐÃ XÓA CSS MINDMAP) --- */
+        .quiz-container { background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-top: 10px; }
+        .quiz-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #334155; }
+        .quiz-item:last-child { border-bottom: none; }
+        .quiz-question { font-weight: 700; color: white; margin-bottom: 10px; font-size: 15px; }
+        .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+        .quiz-opt { padding: 10px 15px; background: #1e293b; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: 0.2s; color: #cbd5e1; display: flex; align-items: center; gap: 10px; }
+        .quiz-opt:hover { background: #334155; }
+        .quiz-opt.selected { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); color: white; }
+        .quiz-opt.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981; }
+        .quiz-opt.wrong { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; }
+        .quiz-explain { margin-top: 10px; font-size: 13px; font-style: italic; color: #94a3b8; display: none; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; }
     </style>
 </head>
 <body>
-
     <div id="authScreen">
         <div class="auth-box">
             <div style="width:60px; height:60px; background:linear-gradient(135deg, #6366f1, #4f46e5); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px; color:white; box-shadow:0 10px 20px rgba(99,102,241,0.4);">
@@ -145,10 +128,8 @@
             </div>
             <h2 style="color:white; margin-bottom:5px; font-size: 22px; font-weight:700;">Học Cùng AI</h2>
             <p style="color:var(--text-sub); margin-bottom:25px; font-size:14px;">Trợ lý học tập thông minh</p>
-            
             <input id="u" class="input-field" placeholder="Tên đăng nhập">
             <input id="p" type="password" class="input-field" placeholder="Mật khẩu">
-            
             <div id="reg" style="display:none;">
                 <select id="role" class="input-field" onchange="toggleCode()">
                     <option value="student">Học sinh</option>
@@ -156,11 +137,8 @@
                 </select>
                 <input id="code" class="input-field" placeholder="Mã Xác Thực (GV)" style="display:none;">
             </div>
-            
             <button class="btn-primary" onclick="auth()">Vào Lớp Ngay</button>
-            <p onclick="toggleReg()" style="margin-top:20px; color:#cbd5e1; font-size:14px; cursor:pointer;">
-                <span>Đăng ký</span> / Đăng nhập
-            </p>
+            <p onclick="toggleReg()" style="margin-top:20px; color:#cbd5e1; font-size:14px; cursor:pointer;"><span>Đăng ký</span> / Đăng nhập</p>
         </div>
     </div>
 
@@ -170,79 +148,50 @@
             <span style="font-weight:700; color:white;">Học Cùng AI</span>
             <div style="width:20px;"></div>
         </div>
-
         <div class="sidebar-overlay" onclick="toggleMenu()"></div>
-
         <nav class="sidebar" id="sidebar">
-            <h3 style="color:white; margin-bottom:20px; font-size: 20px; font-weight:700; display:flex; align-items:center; gap:12px;">
-                <i class="fa-solid fa-robot" style="color:var(--primary);"></i> Học Cùng AI
-            </h3>
-            
-            <div class="sidebar-item highlight" onclick="startNewChat()">
-                <i class="fa-solid fa-plus"></i> Cuộc trò chuyện mới
-            </div>
-
+            <h3 style="color:white; margin-bottom:20px; font-size: 20px; font-weight:700; display:flex; align-items:center; gap:12px;"><i class="fa-solid fa-robot" style="color:var(--primary);"></i> Học Cùng AI</h3>
+            <div class="sidebar-item highlight" onclick="startNewChat()"><i class="fa-solid fa-plus"></i> Cuộc trò chuyện mới</div>
             <div style="margin-top:20px; margin-bottom:10px; font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Lịch sử</div>
-            <div id="historyList">
-                </div>
-            
-            <div id="btnUpload" class="sidebar-item" style="display:none; margin-top: auto;" onclick="openUpload(); toggleMenu();">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu
-            </div>
-
+            <div id="historyList"></div>
+            <div id="btnUpload" class="sidebar-item" style="display:none; margin-top: auto;" onclick="openUpload(); toggleMenu();"><i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu</div>
             <div style="margin-top:10px;">
                 <div style="padding:16px; background:#0f172a; border-radius:16px; border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:36px; height:36px; background:var(--primary); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
-                            <i class="fa-regular fa-user"></i>
-                        </div>
-                        <div style="display:flex; flex-direction:column;">
-                            <span id="uName" style="color:white; font-weight:600; font-size:14px;">User</span>
-                            <span id="uRole" style="color:#64748b; font-size:11px; text-transform:uppercase;">Student</span>
-                        </div>
+                        <div style="width:36px; height:36px; background:var(--primary); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;"><i class="fa-regular fa-user"></i></div>
+                        <div style="display:flex; flex-direction:column;"><span id="uName" style="color:white; font-weight:600; font-size:14px;">User</span><span id="uRole" style="color:#64748b; font-size:11px; text-transform:uppercase;">Student</span></div>
                     </div>
                     <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--danger); cursor:pointer;" onclick="logout()" title="Đăng xuất"></i>
                 </div>
             </div>
         </nav>
-
         <main class="main">
            <div class="subject-bar-wrapper">
-    <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
-    <button class="btn-sub" onclick="sub('math',this)">Toán</button>
-    <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
-    <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
-    <button class="btn-sub" onclick="sub('physics',this)">Vật Lý</button>
-    <button class="btn-sub" onclick="sub('chemistry',this)">Hóa Học</button>
-    <button class="btn-sub" onclick="sub('biology',this)">Sinh Học</button>
-    <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
-    <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
-    <button class="btn-sub" onclick="sub('gdcd',this)">GDCD</button>
-    <button class="btn-sub" onclick="sub('it',this)">Tin Học</button>
-    <button class="btn-sub" onclick="sub('technology',this)">Công Nghệ</button>
-</div>
-
+                <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
+                <button class="btn-sub" onclick="sub('math',this)">Toán</button>
+                <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
+                <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
+                <button class="btn-sub" onclick="sub('physics',this)">Vật Lý</button>
+                <button class="btn-sub" onclick="sub('chemistry',this)">Hóa Học</button>
+                <button class="btn-sub" onclick="sub('biology',this)">Sinh Học</button>
+                <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
+                <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
+                <button class="btn-sub" onclick="sub('gdcd',this)">GDCD</button>
+                <button class="btn-sub" onclick="sub('it',this)">Tin Học</button>
+                <button class="btn-sub" onclick="sub('technology',this)">Công Nghệ</button>
+            </div>
             <div id="chat" class="chat-list">
                 <div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;">
-                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);"><i class="fa-solid fa-graduation-cap"></i></div>
                     <h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2>
-                    <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">
-                        Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.
-                    </p>
+                    <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.</p>
                 </div>
             </div>
-
             <div class="input-container">
                 <div class="input-box">
-                    <button class="icon-btn" onclick="openUpload()" title="Tải file đính kèm">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
+                    <button class="icon-btn" onclick="openUpload()" title="Tải file đính kèm"><i class="fa-solid fa-paperclip"></i></button>
                     <textarea id="prompt" placeholder="Nhập câu hỏi của bạn tại đây..." oninput="autoResize(this)"></textarea>
-                    <button class="icon-btn send-btn" onclick="send()">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
+                    <button class="icon-btn send-btn" onclick="send()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
         </main>
@@ -254,281 +203,157 @@
                 <h3 style="color: white; margin: 0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-database"></i> Kho Tài Liệu</h3>
                 <i class="fa-solid fa-xmark" onclick="document.getElementById('modal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 24px; transition:0.2s;"></i>
             </div>
-            
             <div style="background: #0f172a; padding: 20px; border-radius: 16px; border: 1px dashed var(--border); margin-bottom: 25px;">
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                    <select id="upSub" class="input-field" style="margin:0; flex:1; cursor:pointer;">
-    <option value="general">Kiến thức chung</option>
-    <option value="math">Toán Học</option>
-    <option value="literature">Ngữ Văn</option>
-    <option value="english">Tiếng Anh</option>
-    <option value="physics">Vật Lý</option>
-    <option value="chemistry">Hóa Học</option>
-    <option value="biology">Sinh Học</option>
-    <option value="history">Lịch Sử</option>
-    <option value="geography">Địa Lý</option>
-    <option value="gdcd">Giáo Dục Công Dân</option>
-    <option value="it">Tin Học</option>
-    <option value="technology">Công Nghệ</option>
-</select>
+                        <option value="general">Kiến thức chung</option>
+                        <option value="math">Toán Học</option>
+                        <option value="literature">Ngữ Văn</option>
+                        <option value="english">Tiếng Anh</option>
+                        <option value="physics">Vật Lý</option>
+                        <option value="chemistry">Hóa Học</option>
+                        <option value="biology">Sinh Học</option>
+                        <option value="history">Lịch Sử</option>
+                        <option value="geography">Địa Lý</option>
+                        <option value="gdcd">Giáo Dục Công Dân</option>
+                        <option value="it">Tin Học</option>
+                        <option value="technology">Công Nghệ</option>
+                    </select>
                     <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:12px; width:50px; cursor:pointer; transition:0.2s;"><i class="fa-solid fa-folder-plus"></i></button>
                 </div>
-                
                 <input type="file" id="file" style="display: none;" onchange="document.getElementById('fileName').innerText = this.files[0]?.name || 'Chưa chọn file'">
-                
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span id="fileName" style="font-size:13px; color:#cbd5e1; font-style:italic; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"> <i class="fa-solid fa-arrow-up"></i> Chọn file để tải lên...</span>
                     <button onclick="doUpload()" style="background:var(--primary); color:white; border:none; padding:8px 20px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(99,102,241,0.3);">Upload</button>
                 </div>
                 <p id="stt" style="margin-top:10px; font-size:13px; font-weight:600; color:var(--primary); min-height:20px; text-align:center;"></p>
             </div>
-
             <h4 style="color:#94a3b8; font-size:12px; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">File hiện có:</h4>
             <div id="fileListContainer" class="file-list"></div>
         </div>
     </div>
 
     <script>
-        let currUser=null, currSub='general', isReg=false;
-        let currentChatId = null; 
-        
+        let currUser=null, currSub='general', isReg=false, currentChatId = null;
+        // ĐÃ XÓA mermaid.initialize
+
         function autoResize(el) { el.style.height='48px'; el.style.height=Math.min(el.scrollHeight,150)+'px'; }
-        
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
         function toggleReg() { isReg=!isReg; document.getElementById('reg').style.display=isReg?'block':'none'; }
         function toggleCode() { document.getElementById('code').style.display = document.getElementById('role').value==='teacher'?'block':'none'; }
 
         async function auth() {
-            const u=document.getElementById('u').value.trim();
-            const p=document.getElementById('p').value.trim();
-            
+            const u=document.getElementById('u').value.trim(); const p=document.getElementById('p').value.trim();
             if(u.length < 4) return alert("Tên đăng nhập quá ngắn!");
             if(p.length < 6) return alert("Mật khẩu phải từ 6 ký tự!");
-
             const body = { username:u, password:p, role:'student', secretCode:'' };
             if(isReg) { body.role=document.getElementById('role').value; body.secretCode=document.getElementById('code').value; }
-            try {
-                const res = await fetch(isReg?'/register':'/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-                const d = await res.json();
-                if(d.success) { 
-                    if(isReg){
-                        alert('Đăng ký xong! Mời đăng nhập.'); toggleReg();
-                    } else {
-                        login(d.user); 
-                    }
-                } else alert(d.error);
-            } catch { alert('Lỗi mạng'); }
+            try { const res = await fetch(isReg?'/register':'/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const d = await res.json(); if(d.success) { if(isReg){ alert('Đăng ký xong! Mời đăng nhập.'); toggleReg(); } else { login(d.user); } } else alert(d.error); } catch { alert('Lỗi mạng'); }
         }
 
         function login(u) { 
-            currUser=u; 
-            localStorage.setItem('u',JSON.stringify(u)); 
-            document.getElementById('authScreen').style.display='none'; 
-            document.getElementById('app').style.display='flex'; 
-            
-            document.getElementById('uName').innerText=u.username; 
-            const roleText = u.role === 'teacher' ? 'Teacher' : 'Student';
-            document.getElementById('uRole').innerText = roleText;
-
-            if(u.role==='teacher') document.getElementById('btnUpload').style.display='flex'; 
-            else document.getElementById('btnUpload').style.display='none'; 
-            
-            loadHistory();
+            currUser=u; localStorage.setItem('u',JSON.stringify(u)); document.getElementById('authScreen').style.display='none'; document.getElementById('app').style.display='flex'; 
+            document.getElementById('uName').innerText=u.username; document.getElementById('uRole').innerText = u.role === 'teacher' ? 'Teacher' : 'Student';
+            document.getElementById('btnUpload').style.display=u.role==='teacher'?'flex':'none'; loadHistory();
         }
-
         function logout() { localStorage.removeItem('u'); location.reload(); }
         window.onload=()=>{ if(localStorage.getItem('u')) login(JSON.parse(localStorage.getItem('u'))); }
 
-        function sub(s, el) { 
-            currSub=s; document.querySelectorAll('.btn-sub').forEach(b=>b.classList.remove('active')); el.classList.add('active'); 
-            el.scrollIntoView({behavior: "smooth", inline: "center"});
-            if(document.getElementById('chat').innerHTML.trim() !== "") {
-                document.getElementById('chat').innerHTML+=`<div style="text-align:center; font-size:12px; color:#64748b; margin:20px 0;"><span style="background:#1e293b; padding:6px 16px; border-radius:20px; border:1px solid #334155;">Đã chuyển chủ đề: ${s.toUpperCase()}</span></div>`; 
-                const chat=document.getElementById('chat'); chat.scrollTop=chat.scrollHeight;
-            }
-        }
+        function sub(s, el) { currSub=s; document.querySelectorAll('.btn-sub').forEach(b=>b.classList.remove('active')); el.classList.add('active'); el.scrollIntoView({behavior: "smooth", inline: "center"}); if(document.getElementById('chat').innerHTML.trim() !== "") { document.getElementById('chat').innerHTML+=`<div style="text-align:center; font-size:12px; color:#64748b; margin:20px 0;"><span style="background:#1e293b; padding:6px 16px; border-radius:20px; border:1px solid #334155;">Đã chuyển chủ đề: ${s.toUpperCase()}</span></div>`; const chat=document.getElementById('chat'); chat.scrollTop=chat.scrollHeight; } }
 
-        // --- CẬP NHẬT: LOAD LỊCH SỬ VỚI NÚT XÓA ---
         async function loadHistory() {
             if(!currUser) return;
-            try {
-                const res = await fetch(`/history?username=${currUser.username}`);
-                const chats = await res.json();
-                const list = document.getElementById('historyList');
-                list.innerHTML = chats.map(c => 
-                    `<div class="history-item ${c.id == currentChatId ? 'active' : ''}" onclick="loadChatContent('${c.id}')">
-                        <div class="history-title">
-                            <i class="fa-regular fa-message"></i> ${c.title}
-                        </div>
-                        <i class="fa-solid fa-trash del-chat-btn" onclick="deleteChat('${c.id}', event)" title="Xóa"></i>
-                    </div>`
-                ).join('');
-            } catch(e) { console.error(e); }
+            try { const res = await fetch(`/history?username=${currUser.username}`); const chats = await res.json(); const list = document.getElementById('historyList'); list.innerHTML = chats.map(c => `<div class="history-item ${c.id == currentChatId ? 'active' : ''}" onclick="loadChatContent('${c.id}')"><div class="history-title"><i class="fa-regular fa-message"></i> ${c.title}</div><i class="fa-solid fa-trash del-chat-btn" onclick="deleteChat('${c.id}', event)" title="Xóa"></i></div>`).join(''); } catch(e) { console.error(e); }
         }
-
-        // --- MỚI: HÀM XÓA CHAT ---
         async function deleteChat(chatId, event) {
-            event.stopPropagation(); // Ngăn việc click thùng rác thì lại mở chat ra
-            if(!confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?")) return;
-
-            try {
-                const res = await fetch('/delete-chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chatId: chatId, username: currUser.username })
-                });
-                const d = await res.json();
-                
-                if(d.success) {
-                    // Nếu đang xem đúng chat bị xóa thì reset về màn hình chào
-                    if (currentChatId == chatId) {
-                        startNewChat();
-                    } else {
-                        loadHistory(); // Chỉ reload danh sách nếu xóa chat khác
-                    }
-                } else {
-                    alert(d.error);
-                }
-            } catch(e) { alert("Lỗi khi xóa!"); }
+            event.stopPropagation(); if(!confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?")) return;
+            try { const res = await fetch('/delete-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chatId: chatId, username: currUser.username }) }); const d = await res.json(); if(d.success) { if (currentChatId == chatId) startNewChat(); else loadHistory(); } else alert(d.error); } catch(e) { alert("Lỗi khi xóa!"); }
         }
-
         function startNewChat() {
-            currentChatId = null;
-            document.getElementById('chat').innerHTML = `
-                <div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;">
-                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
-                    <h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2>
-                    <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">
-                        Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.
-                    </p>
-                </div>
-            `;
-            loadHistory();
-            if(window.innerWidth <= 768) toggleMenu();
+            currentChatId = null; document.getElementById('chat').innerHTML = `<div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;"><div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);"><i class="fa-solid fa-graduation-cap"></i></div><h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2><p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.</p></div>`; loadHistory(); if(window.innerWidth <= 768) toggleMenu();
         }
 
         async function loadChatContent(id) {
-            currentChatId = id;
-            if(window.innerWidth <= 768) toggleMenu();
-            
-            loadHistory(); 
-
-            try {
-                const res = await fetch(`/chat-detail?id=${id}`);
-                const chatData = await res.json();
-                if(!chatData) return;
-
-                const chatDiv = document.getElementById('chat');
-                chatDiv.innerHTML = ''; 
-
+            currentChatId = id; if(window.innerWidth <= 768) toggleMenu(); loadHistory(); 
+            try { const res = await fetch(`/chat-detail?id=${id}`); const chatData = await res.json(); if(!chatData) return;
+                const chatDiv = document.getElementById('chat'); chatDiv.innerHTML = ''; 
                 chatData.messages.forEach(msg => {
-                    if(msg.role === 'user') {
-                        chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`;
-                    } else {
-                        let html = `
-                        <div class="msg ai">
-                            <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-                            <div class="bubble">
-                                <div class="md-content">${marked.parse(msg.content)}</div>
-                            </div>
-                        </div>`;
-                        chatDiv.innerHTML += html;
+                    if(msg.role === 'user') chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`;
+                    else {
+                        const msgId = 'msg-' + Math.random().toString(36).substr(2, 9);
+                        chatDiv.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}"><div class="md-content">${marked.parse(msg.content)}</div></div></div>`;
+                        setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100);
                     }
                 });
-                renderMathInElement(chatDiv, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
                 chatDiv.scrollTop = chatDiv.scrollHeight;
-
             } catch(e) { console.error(e); }
         }
 
         async function send() {
             const el=document.getElementById('prompt'); const txt=el.value.trim(); if(!txt)return;
-            const chat=document.getElementById('chat');
-            
-            const welcome = document.getElementById('welcomeMsg');
-            if(welcome) welcome.remove();
-
-            chat.innerHTML+=`<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${txt}</div></div>`;
-            el.value=''; el.style.height='48px'; chat.scrollTop=chat.scrollHeight;
-
-            const loadId = 'ld'+Date.now();
-            chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="padding:15px; color:#94a3b8; font-style:italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang suy nghĩ...</div></div>`;
-            chat.scrollTop=chat.scrollHeight;
-
+            const chat=document.getElementById('chat'); const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove();
+            chat.innerHTML+=`<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${txt}</div></div>`; el.value=''; el.style.height='48px'; chat.scrollTop=chat.scrollHeight;
+            const loadId = 'ld'+Date.now(); chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="padding:15px; color:#94a3b8; font-style:italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang suy nghĩ...</div></div>`; chat.scrollTop=chat.scrollHeight;
             try {
-                const payload = {
-                    prompt: txt, 
-                    subject: currSub,
-                    username: currUser ? currUser.username : null,
-                    chatId: currentChatId
-                };
-
+                const payload = { prompt: txt, subject: currSub, username: currUser ? currUser.username : null, chatId: currentChatId };
                 const res=await fetch('/ask-ai',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-                const d=await res.json();
-                document.getElementById(loadId).remove();
+                const d=await res.json(); document.getElementById(loadId).remove();
+                if(d.chatId) { currentChatId = d.chatId; loadHistory(); }
                 
-                if(d.chatId) {
-                    currentChatId = d.chatId;
-                    loadHistory(); 
-                }
-
-                let headerHTML = '';
-                if(d.isFallback) {
-                    headerHTML = `<span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span>`;
-                } else {
-                    headerHTML = `<span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Sách Giáo Khoa</span>`;
-                }
+                const msgId = 'msg-' + Date.now();
+                let headerHTML = d.isFallback ? `<span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span>` : `<span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Sách Giáo Khoa</span>`;
                 
-                let html = `
-                <div class="msg ai">
-                    <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-                    <div class="bubble">
-                        <div class="ai-header">
-                            ${headerHTML}
-                        </div>
-                        <div class="md-content">${marked.parse(d.answer)}</div>
-                    </div>
-                </div>`;
+                chat.innerHTML+=`<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}"><div class="ai-header">${headerHTML}</div><div class="md-content">${marked.parse(d.answer)}</div></div></div>`;
                 
-                chat.innerHTML+=html;
-                renderMathInElement(chat, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
+                setTimeout(() => { 
+                    renderRichContent(msgId);
+                    renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
+                }, 100);
+                
                 chat.scrollTop=chat.scrollHeight;
             } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444; padding:10px;">Lỗi kết nối server!</span>'; }
         }
 
+        // --- HÀM XỬ LÝ NỘI DUNG (ĐÃ XÓA MINDMAP) ---
+        function renderRichContent(containerId) {
+            const container = document.getElementById(containerId); if (!container) return;
+            // 1. Quiz (Chỉ còn lại Quiz)
+            container.querySelectorAll('pre code.language-json-quiz').forEach(cb => {
+                try {
+                    const data = JSON.parse(cb.textContent);
+                    const quizHTML = document.createElement('div'); quizHTML.className = 'quiz-container';
+                    data.forEach((q, idx) => {
+                        let optsHTML = '';
+                        q.options.forEach((opt, oIdx) => {
+                            optsHTML += `<div class="quiz-opt" onclick="checkAnswer(this, ${oIdx}, ${q.correct}, '${q.explain.replace(/'/g, "\\'")}')"><div style="width:24px; height:24px; border-radius:50%; border:1px solid #64748b; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${String.fromCharCode(65+oIdx)}</div>${opt}</div>`;
+                        });
+                        const qDiv = document.createElement('div'); qDiv.className = 'quiz-item';
+                        qDiv.innerHTML = `<div class="quiz-question">Câu ${idx + 1}: ${q.question}</div><div class="quiz-options">${optsHTML}</div><div class="quiz-explain"></div>`;
+                        quizHTML.appendChild(qDiv);
+                    });
+                    cb.parentElement.replaceWith(quizHTML);
+                } catch (e) {}
+            });
+        }
+
+        function checkAnswer(el, sIdx, cIdx, explain) {
+            const p = el.parentElement; if (p.classList.contains('answered')) return; p.classList.add('answered');
+            const opts = p.querySelectorAll('.quiz-opt');
+            if (sIdx === cIdx) { el.classList.add('correct'); el.innerHTML += ' <i class="fa-solid fa-check"></i>'; }
+            else { el.classList.add('wrong'); el.innerHTML += ' <i class="fa-solid fa-xmark"></i>'; opts[cIdx].classList.add('correct'); }
+            const exDiv = p.parentElement.querySelector('.quiz-explain'); if(exDiv) { exDiv.style.display = 'block'; exDiv.innerHTML = `<strong>Giải thích:</strong> ${explain}`; }
+        }
+
         function openUpload(){ document.getElementById('modal').style.display='flex'; loadFiles(); }
         async function loadFiles() {
-            const res = await fetch('/list-files');
-            const files = await res.json();
-            const container = document.getElementById('fileListContainer');
-            if(files.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>';
-                return;
-            }
+            const res = await fetch('/list-files'); const files = await res.json(); const container = document.getElementById('fileListContainer');
+            if(files.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>'; return; }
             container.innerHTML = files.map(f => {
-                const delBtn = (currUser && currUser.role === 'teacher') 
-                    ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` 
-                    : '';
-                return `
-                <div class="file-item">
-                    <div style="display:flex; align-items:center; gap:12px; overflow:hidden;">
-                        <div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div>
-                        <div style="display:flex; flex-direction:column; overflow:hidden;">
-                            <span class="file-name" style="color:#f1f5f9;">${f.name}</span>
-                            <span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span>
-                        </div>
-                    </div>
-                    ${delBtn}
-                </div>`;
+                const delBtn = (currUser && currUser.role === 'teacher') ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` : '';
+                return `<div class="file-item"><div style="display:flex; align-items:center; gap:12px; overflow:hidden;"><div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div><div style="display:flex; flex-direction:column; overflow:hidden;"><span class="file-name" style="color:#f1f5f9;">${f.name}</span><span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span></div></div>${delBtn}</div>`;
             }).join('');
         }
-        async function deleteFile(n) { 
-            if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { 
-                try { await fetch('/delete-file', { method:'POST', headers:{'role': currUser.role, 'Content-Type':'application/json'}, body:JSON.stringify({filename:n}) }); loadFiles(); } catch { alert("Lỗi khi xóa!"); }
-            } 
-        }
+        async function deleteFile(n) { if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { try { await fetch('/delete-file', { method:'POST', headers:{'role': currUser.role, 'Content-Type':'application/json'}, body:JSON.stringify({filename:n}) }); loadFiles(); } catch { alert("Lỗi khi xóa!"); } } }
         async function doUpload() {
             const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!');
             const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);

@@ -1,10 +1,9 @@
-// server.js - Phiên bản Fix cho Railway (Dùng RAM thay vì ổ cứng)
 require('dotenv').config(); 
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
-const multer = require('multer'); // Upload file
-const mammoth = require('mammoth'); // Đọc Word
+const multer = require('multer'); 
+const mammoth = require('mammoth'); 
 const path = require('path'); 
 const mongoose = require('mongoose'); 
 const bcrypt = require('bcryptjs');   
@@ -21,8 +20,7 @@ const PORT = process.env.PORT || 3000;
 // --- KẾT NỐI MONGODB ---
 const MONGO_URI = process.env.MONGODB_URI; 
 if (!MONGO_URI) {
-    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI trong Variables của Railway!");
-    // Không exit để app vẫn chạy, nhưng sẽ báo lỗi nếu dùng tính năng DB
+    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI!");
 } else {
     mongoose.connect(MONGO_URI)
         .then(() => console.log("✅ Đã kết nối MongoDB Cloud"))
@@ -55,12 +53,11 @@ const KnowledgeSchema = new mongoose.Schema({
 });
 const Knowledge = mongoose.model('Knowledge', KnowledgeSchema);
 
-// --- CẤU HÌNH UPLOAD (QUAN TRỌNG: SỬA ĐỔI CHO RAILWAY) ---
-// Dùng memoryStorage để lưu file vào RAM, tránh lỗi trên Railway
+// --- CẤU HÌNH UPLOAD (Dùng RAM) ---
 const storage = multer.memoryStorage(); 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // Giới hạn file 10MB
+    limits: { fileSize: 10 * 1024 * 1024 } 
 });
 
 app.use(cors());
@@ -211,7 +208,7 @@ app.post('/delete-file', async (req, res) => {
     } catch (e) { res.json({ success: false }); }
 });
 
-// 8. UPLOAD TÀI LIỆU (ĐÃ SỬA LOGIC CHO RAILWAY)
+// 8. UPLOAD TÀI LIỆU
 app.post('/upload-doc', upload.single('file'), async (req, res) => {
     const userRole = req.body.role; 
     const subject = req.body.subject || 'general';
@@ -226,18 +223,14 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
         const genAI = getGenAI();
         let content = "";
         
-        // Lấy dữ liệu từ RAM (Buffer) thay vì File System
         const fileBuffer = req.file.buffer;
         const mimeType = req.file.mimetype;
         const originalName = req.file.originalname.toLowerCase();
 
-        // XỬ LÝ PDF
         if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
             try {
                 const pdfData = await pdfParse(fileBuffer);
                 content = pdfData.text;
-                
-                // Fallback dùng Gemini Vision nếu PDF dạng ảnh
                 if (!content || content.trim().length < 50) {
                     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
                     const result = await model.generateContent([
@@ -247,14 +240,10 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
                     content = result.response.text();
                 }
             } catch (err) { console.error("Lỗi PDF:", err); }
-        } 
-        // XỬ LÝ WORD
-        else if (mimeType.includes('word') || originalName.endsWith('.docx')) {
+        } else if (mimeType.includes('word') || originalName.endsWith('.docx')) {
             const result = await mammoth.convertToHtml({ buffer: fileBuffer });
             content = result.value.replace(/<[^>]*>?/gm, ''); 
-        } 
-        // XỬ LÝ TEXT
-        else {
+        } else {
             content = fileBuffer.toString('utf8');
         }
 
@@ -282,14 +271,13 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
     }
 });
 
-// 9. CHAT VỚI AI
+// 9. CHAT VỚI AI (CẬP NHẬT PROMPT CHO QUIZ VÀ MINDMAP)
 app.post('/ask-ai', async (req, res) => {
     try {
         const { prompt, subject, username, chatId } = req.body;
         const genAI = getGenAI();
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
         
-        // 1. Tìm dữ liệu liên quan trong DB
         const docs = await Knowledge.find({ subject: subject });
         
         let contextContent = "";
@@ -313,12 +301,15 @@ app.post('/ask-ai', async (req, res) => {
              return res.json({ success: true, answer: "Chưa có dữ liệu cho môn này, vui lòng báo giáo viên upload tài liệu.", isFallback: true });
         }
 
+        // --- CẬP NHẬT SYSTEM INSTRUCTION MỚI ---
         const systemInstruction = `
-              Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
-        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
+         Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
+        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" (nếu có).
+        
         DỮ LIỆU THAM KHẢO:
         ${contextContent}
-       ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
+        
+         ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
         1. **Bố cục rõ ràng:** Chia câu trả lời thành các đoạn nhỏ, dễ đọc. Sử dụng các tiêu đề (Heading) nếu câu trả lời dài.
         2. **Highlight từ khóa:** BẮT BUỘC phải **in đậm** (dùng **text**) các con số, tên riêng, định nghĩa quan trọng hoặc kết quả chính.
         3. **Dùng danh sách:** Sử dụng gạch đầu dòng (bullet points) cho các ý liệt kê để dễ nhìn.
@@ -326,13 +317,40 @@ app.post('/ask-ai', async (req, res) => {
 
         ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
         - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm và ưu tiên những phần cập nhật.
-        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
+        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "*⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
+
+        ⚠️ QUY TẮC QUAN TRỌNG VỀ ĐỊNH DẠNG:
+        
+        1. VẼ SƠ ĐỒ TƯ DUY / BIỂU ĐỒ:
+           - Nếu học sinh yêu cầu "vẽ sơ đồ", "tóm tắt bằng sơ đồ", "mindmap", "quy trình"...
+           - Hãy trả về code **Mermaid.js** nằm trong block code: \`\`\`mermaid ... \`\`\`
+           - Sử dụng \`graph LR\` (trái sang phải) hoặc \`graph TD\` (trên xuống dưới).
+           - KHÔNG dùng dấu ngoặc đơn hoặc ký tự lạ trong tên node để tránh lỗi syntax.
+
+        2. TẠO TRẮC NGHIỆM / QUIZ:
+           - Nếu học sinh yêu cầu "kiểm tra bài cũ", "trắc nghiệm", "tạo quiz", "luyện tập"...
+           - Hãy trả về **DUY NHẤT** một mảng JSON chứa các câu hỏi (không thêm lời dẫn).
+           - Bọc trong block code: \`\`\`json-quiz ... \`\`\`
+           - Cấu trúc JSON bắt buộc:
+             [
+               {
+                 "question": "Câu hỏi ở đây?",
+                 "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+                 "correct": 0,
+                 "explain": "Giải thích ngắn gọn tại sao đúng. tuy nhiên ghi nhớ là không được trích xuất tên file"
+               }
+             ]
+             (Lưu ý: correct là số index: 0=A, 1=B, 2=C, 3=D)
+
+        3. TRẢ LỜI THÔNG THƯỜNG:
+           - Dùng Markdown. In đậm **từ khóa**.
+           - Nếu không có trong dữ liệu: Thêm cảnh báo "⚠️ Thông tin ngoài tài liệu".
         `;
+
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemInstruction });
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
 
-        // 2. Lưu Chat
         let currentChatId = chatId;
         let chatTitle = "";
 
