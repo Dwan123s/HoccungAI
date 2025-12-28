@@ -1,15 +1,15 @@
-// server.js - Phiên bản MongoDB + Bảo mật
+// server.js - Phiên bản Fix cho Railway (Dùng RAM thay vì ổ cứng)
 require('dotenv').config(); 
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
-const fs = require('fs');
-const multer = require('multer');
-const mammoth = require('mammoth'); 
+const multer = require('multer'); // Upload file
+const mammoth = require('mammoth'); // Đọc Word
 const path = require('path'); 
-const mongoose = require('mongoose'); // MỚI: Quản lý Database
-const bcrypt = require('bcryptjs');   // MỚI: Mã hóa mật khẩu
+const mongoose = require('mongoose'); 
+const bcrypt = require('bcryptjs');   
 
+// Xử lý import pdf-parse an toàn
 let pdfParse = require('pdf-parse');
 if (typeof pdfParse !== 'function' && pdfParse.default) {
     pdfParse = pdfParse.default;
@@ -19,54 +19,49 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- KẾT NỐI MONGODB ---
-// Bạn cần tạo biến môi trường MONGODB_URI trong file .env hoặc trên server
 const MONGO_URI = process.env.MONGODB_URI; 
 if (!MONGO_URI) {
-    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI!");
-    process.exit(1);
+    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI trong Variables của Railway!");
+    // Không exit để app vẫn chạy, nhưng sẽ báo lỗi nếu dùng tính năng DB
+} else {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log("✅ Đã kết nối MongoDB Cloud"))
+        .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
 }
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ Đã kết nối MongoDB Cloud"))
-    .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
 
-// --- ĐỊNH NGHĨA MODEL (SCHEMA) ---
+// --- ĐỊNH NGHĨA MODEL ---
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // Mật khẩu sẽ được mã hóa
+    password: { type: String, required: true },
     role: { type: String, default: 'student' }
 });
 const User = mongoose.model('User', UserSchema);
 
 const ChatSchema = new mongoose.Schema({
-    id: { type: String, unique: true }, // ID chat (dùng timestamp như cũ)
+    id: { type: String, unique: true },
     username: String,
     title: String,
     subject: String,
     timestamp: Number,
-    messages: Array // Lưu mảng tin nhắn
+    messages: Array
 });
 const Chat = mongoose.model('Chat', ChatSchema);
 
 const KnowledgeSchema = new mongoose.Schema({
     content: String,
-    vector: [Number], // Lưu vector embedding
+    vector: [Number],
     source: String,
     subject: String
 });
 const Knowledge = mongoose.model('Knowledge', KnowledgeSchema);
 
-// --- CẤU HÌNH UPLOAD ---
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) { cb(null, UPLOAD_DIR) },
-    filename: function (req, file, cb) { 
-        const safeName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-        cb(null, Date.now() + '-' + safeName) 
-    }
+// --- CẤU HÌNH UPLOAD (QUAN TRỌNG: SỬA ĐỔI CHO RAILWAY) ---
+// Dùng memoryStorage để lưu file vào RAM, tránh lỗi trên Railway
+const storage = multer.memoryStorage(); 
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // Giới hạn file 10MB
 });
-const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -122,10 +117,9 @@ function cosineSimilarity(vecA, vecB) {
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
-// 1. ĐĂNG KÝ (CÓ MÃ HÓA PASSWORD)
+// 1. ĐĂNG KÝ
 app.post('/register', async (req, res) => {
     const { username, password, role, secretCode } = req.body;
-
     if (!username || username.length < 4) return res.json({ success: false, error: "Tên đăng nhập > 4 ký tự!" });
     if (!password || password.length < 6) return res.json({ success: false, error: "Mật khẩu > 6 ký tự!" });
 
@@ -139,7 +133,6 @@ app.post('/register', async (req, res) => {
             finalRole = 'teacher';
         }
 
-        // Mã hóa mật khẩu trước khi lưu
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -148,39 +141,37 @@ app.post('/register', async (req, res) => {
 
         res.json({ success: true, user: { username, role: finalRole } });
     } catch (e) {
-        res.status(500).json({ success: false, error: "Lỗi Server" });
+        res.status(500).json({ success: false, error: "Lỗi Server DB" });
     }
 });
 
-// 2. ĐĂNG NHẬP (SO SÁNH HASH)
+// 2. ĐĂNG NHẬP
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username });
         if (!user) return res.json({ success: false, error: "Sai tài khoản!" });
 
-        // So sánh mật khẩu nhập vào với mật khẩu đã mã hóa trong DB
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.json({ success: false, error: "Sai mật khẩu!" });
 
         res.json({ success: true, user: { username: user.username, role: user.role } });
     } catch (e) {
-        res.status(500).json({ success: false, error: "Lỗi Server" });
+        res.status(500).json({ success: false, error: "Lỗi Server DB" });
     }
 });
 
-// 3. LẤY DANH SÁCH LỊCH SỬ CHAT (TỪ MONGODB)
+// 3. LỊCH SỬ CHAT
 app.get('/history', async (req, res) => {
     const username = req.query.username;
     if (!username) return res.json([]);
     try {
-        const userChats = await Chat.find({ username }, 'id title timestamp')
-                                    .sort({ timestamp: -1 }); // Mới nhất lên đầu
+        const userChats = await Chat.find({ username }, 'id title timestamp').sort({ timestamp: -1 });
         res.json(userChats);
     } catch (e) { res.json([]); }
 });
 
-// 4. LẤY CHI TIẾT CHAT
+// 4. CHI TIẾT CHAT
 app.get('/chat-detail', async (req, res) => {
     try {
         const chat = await Chat.findOne({ id: req.query.id });
@@ -195,17 +186,13 @@ app.post('/delete-chat', async (req, res) => {
         const result = await Chat.deleteOne({ id: chatId, username: username });
         if (result.deletedCount > 0) res.json({ success: true });
         else res.json({ success: false, error: "Không tìm thấy!" });
-    } catch (e) {
-        res.json({ success: false, error: "Lỗi khi xóa!" });
-    }
+    } catch (e) { res.json({ success: false, error: "Lỗi khi xóa!" }); }
 });
 
 // 6. DANH SÁCH FILE
 app.get('/list-files', async (req, res) => {
     try {
-        // Lấy danh sách các nguồn file duy nhất
         const files = await Knowledge.distinct('source');
-        // Vì distinct chỉ trả về tên, ta cần lấy thêm subject. Cách này hơi thủ công nhưng đơn giản:
         const fileDetails = [];
         for (const f of files) {
             const doc = await Knowledge.findOne({ source: f }, 'subject');
@@ -224,50 +211,58 @@ app.post('/delete-file', async (req, res) => {
     } catch (e) { res.json({ success: false }); }
 });
 
-// 8. UPLOAD TÀI LIỆU
+// 8. UPLOAD TÀI LIỆU (ĐÃ SỬA LOGIC CHO RAILWAY)
 app.post('/upload-doc', upload.single('file'), async (req, res) => {
     const userRole = req.body.role; 
     const subject = req.body.subject || 'general';
 
     if (userRole !== 'teacher') {
-        if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         return res.status(403).json({ success: false, error: "Quyền giáo viên!" });
     }
 
     try {
         if (!req.file) throw new Error("Chưa chọn file!");
+        
         const genAI = getGenAI();
         let content = "";
-        const filePath = req.file.path;
         
-        // ... (Giữ nguyên logic đọc file PDF/Word/Text cũ) ...
+        // Lấy dữ liệu từ RAM (Buffer) thay vì File System
+        const fileBuffer = req.file.buffer;
         const mimeType = req.file.mimetype;
         const originalName = req.file.originalname.toLowerCase();
+
+        // XỬ LÝ PDF
         if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
-            const dataBuffer = fs.readFileSync(filePath);
-            const pdfData = await pdfParse(dataBuffer);
-            content = pdfData.text;
-            if (!content || content.trim().length < 50) {
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-                const result = await model.generateContent([
-                    "Trích xuất toàn bộ văn bản.",
-                    { inlineData: { data: Buffer.from(fs.readFileSync(filePath)).toString("base64"), mimeType: "application/pdf" } },
-                ]);
-                content = result.response.text();
-            }
-        } else if (mimeType.includes('word') || originalName.endsWith('.docx')) {
-            const result = await mammoth.convertToHtml({ path: filePath });
-            content = result.value; 
-        } else {
-            content = fs.readFileSync(filePath, 'utf8');
+            try {
+                const pdfData = await pdfParse(fileBuffer);
+                content = pdfData.text;
+                
+                // Fallback dùng Gemini Vision nếu PDF dạng ảnh
+                if (!content || content.trim().length < 50) {
+                    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+                    const result = await model.generateContent([
+                        "Trích xuất toàn bộ văn bản.",
+                        { inlineData: { data: fileBuffer.toString("base64"), mimeType: "application/pdf" } },
+                    ]);
+                    content = result.response.text();
+                }
+            } catch (err) { console.error("Lỗi PDF:", err); }
+        } 
+        // XỬ LÝ WORD
+        else if (mimeType.includes('word') || originalName.endsWith('.docx')) {
+            const result = await mammoth.convertToHtml({ buffer: fileBuffer });
+            content = result.value.replace(/<[^>]*>?/gm, ''); 
+        } 
+        // XỬ LÝ TEXT
+        else {
+            content = fileBuffer.toString('utf8');
         }
 
-        if (!content || content.length < 20) throw new Error("File rỗng!");
+        if (!content || content.length < 20) throw new Error("File rỗng hoặc không đọc được!");
         
         let textChunks = content.includes("<table") ? [content] : splitTextIntoChunks(content.replace(/[ \t]+/g, " ").trim(), 1000);
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
         
-        // Lưu vào MongoDB thay vì biến vectorStore
         const knowledgeBatch = [];
         for (const chunk of textChunks) {
             const result = await embedModel.embedContent(chunk);
@@ -280,10 +275,9 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
         }
         await Knowledge.insertMany(knowledgeBatch);
 
-        fs.unlinkSync(filePath); 
         res.json({ success: true, message: `Đã học: ${req.file.originalname}` });
     } catch (error) {
-        if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        console.error("Upload Error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -295,8 +289,7 @@ app.post('/ask-ai', async (req, res) => {
         const genAI = getGenAI();
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
         
-        // 1. Tìm kiếm Vector (Đơn giản hóa: Lấy hết document của môn học về RAM để tính cosine - Tốt cho quy mô nhỏ)
-        // Lưu ý: Quy mô lớn cần dùng MongoDB Atlas Vector Search (phức tạp hơn)
+        // 1. Tìm dữ liệu liên quan trong DB
         const docs = await Knowledge.find({ subject: subject });
         
         let contextContent = "";
@@ -304,7 +297,6 @@ app.post('/ask-ai', async (req, res) => {
 
         if (docs.length === 0) {
             isFallback = true;
-             // Vẫn cho AI trả lời nhưng đánh dấu fallback
         } else {
             const queryVector = (await embedModel.embedContent(prompt)).embedding.values;
             const scoredDocs = docs.map(doc => ({ 
@@ -318,11 +310,11 @@ app.post('/ask-ai', async (req, res) => {
         }
 
         if (!contextContent && !isFallback) {
-             return res.json({ success: true, answer: "Chưa có dữ liệu cho môn này!", isFallback: true });
+             return res.json({ success: true, answer: "Chưa có dữ liệu cho môn này, vui lòng báo giáo viên upload tài liệu.", isFallback: true });
         }
 
         const systemInstruction = `
-         Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
+              Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
         NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
         DỮ LIỆU THAM KHẢO:
         ${contextContent}
@@ -336,20 +328,17 @@ app.post('/ask-ai', async (req, res) => {
         - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm và ưu tiên những phần cập nhật.
         - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
         `;
-
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemInstruction });
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
 
-        // 2. Lưu Chat vào MongoDB
+        // 2. Lưu Chat
         let currentChatId = chatId;
         let chatTitle = "";
 
         if (username) {
             let chat;
-            if (currentChatId) {
-                chat = await Chat.findOne({ id: currentChatId });
-            }
+            if (currentChatId) chat = await Chat.findOne({ id: currentChatId });
 
             if (!chat) {
                 currentChatId = Date.now().toString();
@@ -363,13 +352,13 @@ app.post('/ask-ai', async (req, res) => {
                     messages: []
                 });
             } else {
-                chat.timestamp = Date.now(); // Cập nhật thời gian để nhảy lên đầu
+                chat.timestamp = Date.now();
                 chatTitle = chat.title;
             }
 
             chat.messages.push({ role: 'user', content: prompt });
             chat.messages.push({ role: 'ai', content: responseText });
-            await chat.save(); // Lưu xuống DB
+            await chat.save();
         }
 
         res.json({ 
