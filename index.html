@@ -207,14 +207,20 @@
         </nav>
 
         <main class="main">
-            <div class="subject-bar-wrapper">
-                <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
-                <button class="btn-sub" onclick="sub('math',this)">Toán Học</button>
-                <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
-                <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
-                <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
-                <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
-            </div>
+           <div class="subject-bar-wrapper">
+    <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
+    <button class="btn-sub" onclick="sub('math',this)">Toán</button>
+    <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
+    <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
+    <button class="btn-sub" onclick="sub('physics',this)">Vật Lý</button>
+    <button class="btn-sub" onclick="sub('chemistry',this)">Hóa Học</button>
+    <button class="btn-sub" onclick="sub('biology',this)">Sinh Học</button>
+    <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
+    <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
+    <button class="btn-sub" onclick="sub('gdcd',this)">GDCD</button>
+    <button class="btn-sub" onclick="sub('it',this)">Tin Học</button>
+    <button class="btn-sub" onclick="sub('technology',this)">Công Nghệ</button>
+</div>
 
             <div id="chat" class="chat-list">
                 <div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;">
@@ -251,12 +257,20 @@
             
             <div style="background: #0f172a; padding: 20px; border-radius: 16px; border: 1px dashed var(--border); margin-bottom: 25px;">
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <select id="upSub" class="input-field" style="margin:0; flex:1; cursor:pointer;">
-                        <option value="general">Kiến thức chung</option>
-                        <option value="math">Toán Học</option>
-                        <option value="literature">Ngữ Văn</option>
-                        <option value="history">Lịch Sử</option>
-                    </select>
+                   <select id="upSub" class="input-field" style="margin:0; flex:1; cursor:pointer;">
+    <option value="general">Kiến thức chung</option>
+    <option value="math">Toán Học</option>
+    <option value="literature">Ngữ Văn</option>
+    <option value="english">Tiếng Anh</option>
+    <option value="physics">Vật Lý</option>
+    <option value="chemistry">Hóa Học</option>
+    <option value="biology">Sinh Học</option>
+    <option value="history">Lịch Sử</option>
+    <option value="geography">Địa Lý</option>
+    <option value="gdcd">Giáo Dục Công Dân</option>
+    <option value="it">Tin Học</option>
+    <option value="technology">Công Nghệ</option>
+</select>
                     <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:12px; width:50px; cursor:pointer; transition:0.2s;"><i class="fa-solid fa-folder-plus"></i></button>
                 </div>
                 

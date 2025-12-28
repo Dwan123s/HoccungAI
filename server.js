@@ -78,7 +78,8 @@ const TEACHER_SECRET_CODE = process.env.TEACHER_SECRET || "GV123";
 const allKeys = [
     process.env.GOOGLE_API_KEY,
     process.env.GOOGLE_API_KEY_2,
-    process.env.GOOGLE_API_KEY_3
+    process.env.GOOGLE_API_KEY_3,
+    process.env.GOOGLE_API_KEY_4
 ].filter(key => key);
 
 function getGenAI() {
@@ -247,7 +248,7 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
             const pdfData = await pdfParse(dataBuffer);
             content = pdfData.text;
             if (!content || content.trim().length < 50) {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
                 const result = await model.generateContent([
                     "Trích xuất toàn bộ văn bản.",
                     { inlineData: { data: Buffer.from(fs.readFileSync(filePath)).toString("base64"), mimeType: "application/pdf" } },
@@ -321,13 +322,22 @@ app.post('/ask-ai', async (req, res) => {
         }
 
         const systemInstruction = `
-        Bạn là Giáo viên Trợ giảng AI.
+         Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
+        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
         DỮ LIỆU THAM KHẢO:
         ${contextContent}
-        ... (Giữ nguyên Prompt cũ) ...
+       ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
+        1. **Bố cục rõ ràng:** Chia câu trả lời thành các đoạn nhỏ, dễ đọc. Sử dụng các tiêu đề (Heading) nếu câu trả lời dài.
+        2. **Highlight từ khóa:** BẮT BUỘC phải **in đậm** (dùng **text**) các con số, tên riêng, định nghĩa quan trọng hoặc kết quả chính.
+        3. **Dùng danh sách:** Sử dụng gạch đầu dòng (bullet points) cho các ý liệt kê để dễ nhìn.
+        4. **Bảng biểu:** Nếu dữ liệu có tính so sánh, hãy trình bày dưới dạng Bảng (Table).
+
+        ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
+        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm và ưu tiên những phần cập nhật.
+        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
         `;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: systemInstruction });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemInstruction });
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
 
