@@ -2,5 +2,6 @@ node_modules
 .env
 users.json
 knowledge.json
+chats.json
 uploads/*
 !uploads/.gitkeep

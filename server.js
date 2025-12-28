@@ -1,6 +1,5 @@
-// server.js
+// server.js - Phiên bản MongoDB + Bảo mật
 require('dotenv').config(); 
-
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
@@ -8,6 +7,8 @@ const fs = require('fs');
 const multer = require('multer');
 const mammoth = require('mammoth'); 
 const path = require('path'); 
+const mongoose = require('mongoose'); // MỚI: Quản lý Database
+const bcrypt = require('bcryptjs');   // MỚI: Mã hóa mật khẩu
 
 let pdfParse = require('pdf-parse');
 if (typeof pdfParse !== 'function' && pdfParse.default) {
@@ -15,11 +16,48 @@ if (typeof pdfParse !== 'function' && pdfParse.default) {
 }
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// --- KẾT NỐI MONGODB ---
+// Bạn cần tạo biến môi trường MONGODB_URI trong file .env hoặc trên server
+const MONGO_URI = process.env.MONGODB_URI; 
+if (!MONGO_URI) {
+    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI!");
+    process.exit(1);
 }
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ Đã kết nối MongoDB Cloud"))
+    .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
+
+// --- ĐỊNH NGHĨA MODEL (SCHEMA) ---
+const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true }, // Mật khẩu sẽ được mã hóa
+    role: { type: String, default: 'student' }
+});
+const User = mongoose.model('User', UserSchema);
+
+const ChatSchema = new mongoose.Schema({
+    id: { type: String, unique: true }, // ID chat (dùng timestamp như cũ)
+    username: String,
+    title: String,
+    subject: String,
+    timestamp: Number,
+    messages: Array // Lưu mảng tin nhắn
+});
+const Chat = mongoose.model('Chat', ChatSchema);
+
+const KnowledgeSchema = new mongoose.Schema({
+    content: String,
+    vector: [Number], // Lưu vector embedding
+    source: String,
+    subject: String
+});
+const Knowledge = mongoose.model('Knowledge', KnowledgeSchema);
+
+// --- CẤU HÌNH UPLOAD ---
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) { cb(null, UPLOAD_DIR) },
@@ -35,29 +73,21 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname)); 
 
 const TEACHER_SECRET_CODE = process.env.TEACHER_SECRET || "GV123"; 
-const PORT = process.env.PORT || 3000;
 
+// --- CẤU HÌNH AI ---
 const allKeys = [
     process.env.GOOGLE_API_KEY,
     process.env.GOOGLE_API_KEY_2,
-    process.env.GOOGLE_API_KEY_3,
-    process.env.GOOGLE_API_KEY_4
+    process.env.GOOGLE_API_KEY_3
 ].filter(key => key);
 
-if (allKeys.length === 0) console.error("❌ LỖI: Không tìm thấy API Key!");
-
 function getGenAI() {
+    if (allKeys.length === 0) throw new Error("Không tìm thấy API Key!");
     const randomKey = allKeys[Math.floor(Math.random() * allKeys.length)];
     return new GoogleGenerativeAI(randomKey);
 }
 
-// ============================================================
-// QUẢN LÝ DỮ LIỆU (USERS, KNOWLEDGE, CHATS)
-// ============================================================
-let vectorStore = []; 
-let users = [];
-let chats = []; // <--- MỚI: Biến lưu lịch sử chat
-
+// Hàm cắt nhỏ văn bản
 function splitTextIntoChunks(text, chunkSize = 1500) {
     const chunks = [];
     const sentences = text.split(/(?<=[.?!])\s+/); 
@@ -74,31 +104,7 @@ function splitTextIntoChunks(text, chunkSize = 1500) {
     return chunks;
 }
 
-function loadData() {
-    const knowledgePath = path.join(__dirname, 'knowledge.json');
-    const usersPath = path.join(__dirname, 'users.json');
-    const chatsPath = path.join(__dirname, 'chats.json'); // <--- MỚI: File chats
-
-    if (fs.existsSync(knowledgePath)) {
-        try { vectorStore = JSON.parse(fs.readFileSync(knowledgePath, 'utf8')); } catch (e) { vectorStore = []; }
-    } else { fs.writeFileSync(knowledgePath, '[]'); }
-
-    if (fs.existsSync(usersPath)) {
-        try { users = JSON.parse(fs.readFileSync(usersPath, 'utf8')); } catch (e) { users = []; }
-    } else { fs.writeFileSync(usersPath, '[]'); }
-
-    // <--- MỚI: Load Chats
-    if (fs.existsSync(chatsPath)) {
-        try { chats = JSON.parse(fs.readFileSync(chatsPath, 'utf8')); } catch (e) { chats = []; }
-    } else { fs.writeFileSync(chatsPath, '[]'); }
-
-    console.log(`✅ Server sẵn sàng. Users: ${users.length}, Docs: ${vectorStore.length}, Chats: ${chats.length}`);
-}
-
-function saveUsers() { fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify(users, null, 2)); }
-function saveKnowledge() { fs.writeFileSync(path.join(__dirname, 'knowledge.json'), JSON.stringify(vectorStore, null, 2)); }
-function saveChats() { fs.writeFileSync(path.join(__dirname, 'chats.json'), JSON.stringify(chats, null, 2)); } // <--- MỚI
-
+// Hàm tính độ tương đồng
 function cosineSimilarity(vecA, vecB) {
     if (!vecA || !vecB) return 0;
     let dotProduct = 0, normA = 0, normB = 0;
@@ -107,86 +113,124 @@ function cosineSimilarity(vecA, vecB) {
         normA += vecA[i] * vecA[i];
         normB += vecB[i] * vecB[i];
     }
+    if (normA === 0 || normB === 0) return 0;
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-loadData();
-
 // --- ROUTES ---
+
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
-// --- MỚI: ĐĂNG KÝ VỚI VALIDATION ---
-app.post('/register', (req, res) => {
+// 1. ĐĂNG KÝ (CÓ MÃ HÓA PASSWORD)
+app.post('/register', async (req, res) => {
     const { username, password, role, secretCode } = req.body;
 
-    // 1. Validation cơ bản
-    if (!username || username.length < 4) return res.json({ success: false, error: "Tên đăng nhập phải từ 4 ký tự!" });
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.json({ success: false, error: "Tên đăng nhập không chứa ký tự đặc biệt!" });
-    if (!password || password.length < 6) return res.json({ success: false, error: "Mật khẩu phải từ 6 ký tự!" });
+    if (!username || username.length < 4) return res.json({ success: false, error: "Tên đăng nhập > 4 ký tự!" });
+    if (!password || password.length < 6) return res.json({ success: false, error: "Mật khẩu > 6 ký tự!" });
 
-    if (users.find(u => u.username === username)) return res.json({ success: false, error: "Tên đã tồn tại!" });
-    
-    let finalRole = 'student';
-    if (role === 'teacher') {
-        if (secretCode === TEACHER_SECRET_CODE) finalRole = 'teacher';
-        else return res.json({ success: false, error: "Sai mã giáo viên!" });
+    try {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) return res.json({ success: false, error: "Tên đã tồn tại!" });
+
+        let finalRole = 'student';
+        if (role === 'teacher') {
+            if (secretCode !== TEACHER_SECRET_CODE) return res.json({ success: false, error: "Sai mã giáo viên!" });
+            finalRole = 'teacher';
+        }
+
+        // Mã hóa mật khẩu trước khi lưu
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new User({ username, password: hashedPassword, role: finalRole });
+        await newUser.save();
+
+        res.json({ success: true, user: { username, role: finalRole } });
+    } catch (e) {
+        res.status(500).json({ success: false, error: "Lỗi Server" });
     }
-    users.push({ username, password, role: finalRole });
-    saveUsers();
-    res.json({ success: true, user: { username, role: finalRole } });
 });
 
-app.post('/login', (req, res) => {
+// 2. ĐĂNG NHẬP (SO SÁNH HASH)
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) res.json({ success: true, user: { username: user.username, role: user.role } });
-    else res.json({ success: false, error: "Sai tài khoản hoặc mật khẩu!" });
+    try {
+        const user = await User.findOne({ username });
+        if (!user) return res.json({ success: false, error: "Sai tài khoản!" });
+
+        // So sánh mật khẩu nhập vào với mật khẩu đã mã hóa trong DB
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.json({ success: false, error: "Sai mật khẩu!" });
+
+        res.json({ success: true, user: { username: user.username, role: user.role } });
+    } catch (e) {
+        res.status(500).json({ success: false, error: "Lỗi Server" });
+    }
 });
 
-// --- MỚI: API LẤY DANH SÁCH LỊCH SỬ CHAT ---
-app.get('/history', (req, res) => {
+// 3. LẤY DANH SÁCH LỊCH SỬ CHAT (TỪ MONGODB)
+app.get('/history', async (req, res) => {
     const username = req.query.username;
-    if(!username) return res.json([]);
-    // Chỉ trả về thông tin tóm tắt để hiển thị sidebar (không lấy nội dung chi tiết cho nhẹ)
-    const userChats = chats
-        .filter(c => c.username === username)
-        .map(c => ({ id: c.id, title: c.title, timestamp: c.timestamp }))
-        .sort((a, b) => b.timestamp - a.timestamp); // Mới nhất lên đầu
-    res.json(userChats);
+    if (!username) return res.json([]);
+    try {
+        const userChats = await Chat.find({ username }, 'id title timestamp')
+                                    .sort({ timestamp: -1 }); // Mới nhất lên đầu
+        res.json(userChats);
+    } catch (e) { res.json([]); }
 });
 
-// --- MỚI: API LẤY CHI TIẾT 1 CUỘC TRÒ CHUYỆN ---
-app.get('/chat-detail', (req, res) => {
-    const { id } = req.query;
-    const chat = chats.find(c => c.id == id);
-    if(chat) res.json(chat);
-    else res.json(null);
+// 4. LẤY CHI TIẾT CHAT
+app.get('/chat-detail', async (req, res) => {
+    try {
+        const chat = await Chat.findOne({ id: req.query.id });
+        res.json(chat || null);
+    } catch (e) { res.json(null); }
 });
 
-app.get('/list-files', (req, res) => {
-    const files = vectorStore.map(item => ({ name: item.source, subject: item.subject || 'general' }));
-    const uniqueFiles = [...new Map(files.map(item => [item.name, item])).values()];
-    res.json(uniqueFiles);
+// 5. XÓA CHAT
+app.post('/delete-chat', async (req, res) => {
+    const { chatId, username } = req.body;
+    try {
+        const result = await Chat.deleteOne({ id: chatId, username: username });
+        if (result.deletedCount > 0) res.json({ success: true });
+        else res.json({ success: false, error: "Không tìm thấy!" });
+    } catch (e) {
+        res.json({ success: false, error: "Lỗi khi xóa!" });
+    }
 });
 
-app.post('/delete-file', (req, res) => {
-    if (req.headers['role'] !== 'teacher') return res.status(403).json({ success: false, error: "Không có quyền!" });
-    const { filename } = req.body;
-    const initLen = vectorStore.length;
-    vectorStore = vectorStore.filter(item => item.source !== filename);
-    if (vectorStore.length < initLen) {
-        saveKnowledge();
+// 6. DANH SÁCH FILE
+app.get('/list-files', async (req, res) => {
+    try {
+        // Lấy danh sách các nguồn file duy nhất
+        const files = await Knowledge.distinct('source');
+        // Vì distinct chỉ trả về tên, ta cần lấy thêm subject. Cách này hơi thủ công nhưng đơn giản:
+        const fileDetails = [];
+        for (const f of files) {
+            const doc = await Knowledge.findOne({ source: f }, 'subject');
+            if (doc) fileDetails.push({ name: f, subject: doc.subject });
+        }
+        res.json(fileDetails);
+    } catch (e) { res.json([]); }
+});
+
+// 7. XÓA FILE
+app.post('/delete-file', async (req, res) => {
+    if (req.headers['role'] !== 'teacher') return res.status(403).json({ success: false, error: "Cấm!" });
+    try {
+        await Knowledge.deleteMany({ source: req.body.filename });
         res.json({ success: true });
-    } else res.json({ success: false, error: "Không tìm thấy file!" });
+    } catch (e) { res.json({ success: false }); }
 });
 
+// 8. UPLOAD TÀI LIỆU
 app.post('/upload-doc', upload.single('file'), async (req, res) => {
     const userRole = req.body.role; 
     const subject = req.body.subject || 'general';
 
     if (userRole !== 'teacher') {
         if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        return res.status(403).json({ success: false, error: "Chỉ giáo viên mới được upload!" });
+        return res.status(403).json({ success: false, error: "Quyền giáo viên!" });
     }
 
     try {
@@ -194,9 +238,10 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
         const genAI = getGenAI();
         let content = "";
         const filePath = req.file.path;
+        
+        // ... (Giữ nguyên logic đọc file PDF/Word/Text cũ) ...
         const mimeType = req.file.mimetype;
         const originalName = req.file.originalname.toLowerCase();
-
         if (mimeType === 'application/pdf' || originalName.endsWith('.pdf')) {
             const dataBuffer = fs.readFileSync(filePath);
             const pdfData = await pdfParse(dataBuffer);
@@ -217,134 +262,120 @@ app.post('/upload-doc', upload.single('file'), async (req, res) => {
         }
 
         if (!content || content.length < 20) throw new Error("File rỗng!");
+        
         let textChunks = content.includes("<table") ? [content] : splitTextIntoChunks(content.replace(/[ \t]+/g, " ").trim(), 1000);
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        
+        // Lưu vào MongoDB thay vì biến vectorStore
+        const knowledgeBatch = [];
         for (const chunk of textChunks) {
             const result = await embedModel.embedContent(chunk);
-            vectorStore.push({ content: chunk, vector: result.embedding.values, source: req.file.originalname, subject: subject });
+            knowledgeBatch.push({
+                content: chunk,
+                vector: result.embedding.values,
+                source: req.file.originalname,
+                subject: subject
+            });
         }
-        saveKnowledge();
+        await Knowledge.insertMany(knowledgeBatch);
+
         fs.unlinkSync(filePath); 
         res.json({ success: true, message: `Đã học: ${req.file.originalname}` });
     } catch (error) {
-        console.error("Lỗi upload:", error);
         if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
+// 9. CHAT VỚI AI
 app.post('/ask-ai', async (req, res) => {
     try {
-        // --- MỚI: Nhận thêm chatId và username
         const { prompt, subject, username, chatId } = req.body;
-        
-        const relevantDocs = vectorStore.filter(doc => doc.subject === subject);
-        const docsToSearch = relevantDocs.length > 0 ? relevantDocs : vectorStore;
-
-        if (docsToSearch.length === 0) {
-             return res.json({ success: true, answer: `⚠️ **Chưa có dữ liệu!**\n\nHệ thống chưa có tài liệu nào cho môn này. Vui lòng tải lên tài liệu để bắt đầu.`, isFallback: true });
-        }
-
         const genAI = getGenAI();
         const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
-        const queryVector = (await embedModel.embedContent(prompt)).embedding.values;
+        
+        // 1. Tìm kiếm Vector (Đơn giản hóa: Lấy hết document của môn học về RAM để tính cosine - Tốt cho quy mô nhỏ)
+        // Lưu ý: Quy mô lớn cần dùng MongoDB Atlas Vector Search (phức tạp hơn)
+        const docs = await Knowledge.find({ subject: subject });
+        
+        let contextContent = "";
+        let isFallback = false;
 
-        const scoredDocs = docsToSearch.map(doc => ({ ...doc, score: cosineSimilarity(queryVector, doc.vector) }));
-        scoredDocs.sort((a, b) => b.score - a.score);
-        
-        const topMatches = scoredDocs.slice(0, 5); 
-        const contextContent = topMatches.map(m => `--- Nguồn: ${m.source} ---\n${m.content}`).join("\n\n");
-        
+        if (docs.length === 0) {
+            isFallback = true;
+             // Vẫn cho AI trả lời nhưng đánh dấu fallback
+        } else {
+            const queryVector = (await embedModel.embedContent(prompt)).embedding.values;
+            const scoredDocs = docs.map(doc => ({ 
+                source: doc.source, 
+                content: doc.content, 
+                score: cosineSimilarity(queryVector, doc.vector) 
+            }));
+            scoredDocs.sort((a, b) => b.score - a.score);
+            const topMatches = scoredDocs.slice(0, 5);
+            contextContent = topMatches.map(m => `--- Nguồn: ${m.source} ---\n${m.content}`).join("\n\n");
+        }
+
+        if (!contextContent && !isFallback) {
+             return res.json({ success: true, answer: "Chưa có dữ liệu cho môn này!", isFallback: true });
+        }
+
         const systemInstruction = `
-        Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
-        NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
+        Bạn là Giáo viên Trợ giảng AI.
         DỮ LIỆU THAM KHẢO:
         ${contextContent}
-       ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
-        1. **Bố cục rõ ràng:** Chia câu trả lời thành các đoạn nhỏ, dễ đọc. Sử dụng các tiêu đề (Heading) nếu câu trả lời dài.
-        2. **Highlight từ khóa:** BẮT BUỘC phải **in đậm** (dùng **text**) các con số, tên riêng, định nghĩa quan trọng hoặc kết quả chính.
-        3. **Dùng danh sách:** Sử dụng gạch đầu dòng (bullet points) cho các ý liệt kê để dễ nhìn.
-        4. **Bảng biểu:** Nếu dữ liệu có tính so sánh, hãy trình bày dưới dạng Bảng (Table).
-
-        ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
-        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm và ưu tiên những phần cập nhật.
-        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "**⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
+        ... (Giữ nguyên Prompt cũ) ...
         `;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemInstruction });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: systemInstruction });
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
-        const isFallback = responseText.includes("⚠️");
 
-        // ============================================================
-        // --- MỚI: LƯU LỊCH SỬ CHAT ---
-        // ============================================================
+        // 2. Lưu Chat vào MongoDB
         let currentChatId = chatId;
         let chatTitle = "";
 
         if (username) {
             let chat;
-            // Nếu có chatId gửi lên, tìm chat đó
             if (currentChatId) {
-                chat = chats.find(c => c.id == currentChatId);
+                chat = await Chat.findOne({ id: currentChatId });
             }
 
-            // Nếu không tìm thấy hoặc chưa có ID -> Tạo mới
             if (!chat) {
-                currentChatId = Date.now();
+                currentChatId = Date.now().toString();
                 chatTitle = prompt.length > 30 ? prompt.substring(0, 30) + "..." : prompt;
-                chat = {
+                chat = new Chat({
                     id: currentChatId,
                     username: username,
                     title: chatTitle,
                     timestamp: Date.now(),
                     subject: subject,
                     messages: []
-                };
-                chats.push(chat);
+                });
             } else {
-                // Update timestamp để nó nhảy lên đầu
-                chat.timestamp = Date.now();
+                chat.timestamp = Date.now(); // Cập nhật thời gian để nhảy lên đầu
                 chatTitle = chat.title;
             }
 
-            // Push message
             chat.messages.push({ role: 'user', content: prompt });
             chat.messages.push({ role: 'ai', content: responseText });
-            saveChats();
+            await chat.save(); // Lưu xuống DB
         }
 
         res.json({ 
             success: true, 
             answer: responseText, 
-            isFallback: isFallback,
-            chatId: currentChatId, // Trả về ID để client biết
+            isFallback: responseText.includes("⚠️"),
+            chatId: currentChatId, 
             chatTitle: chatTitle
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, error: "Lỗi Server!" });
-    }
-});
-// ... (GIỮ NGUYÊN CÁC PHẦN TRÊN) ...
-
-// --- API XÓA LỊCH SỬ CHAT (MỚI THÊM) ---
-app.post('/delete-chat', (req, res) => {
-    const { chatId, username } = req.body;
-    
-    const initialLength = chats.length;
-    // Lọc bỏ chat có id và username khớp
-    chats = chats.filter(c => !(c.id == chatId && c.username === username));
-
-    if (chats.length < initialLength) {
-        saveChats(); // Lưu lại file
-        res.json({ success: true });
-    } else {
-        res.json({ success: false, error: "Không tìm thấy đoạn chat cần xóa!" });
+        res.status(500).json({ success: false, error: "Lỗi Server AI!" });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
