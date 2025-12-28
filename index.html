@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Học Cùng AI - Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -33,7 +33,6 @@
         .bubble { max-width: 85%; padding: 0; border-radius: 16px; font-size: 16px; line-height: 1.6; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
         .user .bubble { background: var(--bg-bubble-user); color: white; padding: 12px 18px; border-bottom-right-radius: 4px; }
         .ai .bubble { background: var(--bg-bubble-ai); border: 1px solid var(--border); border-bottom-left-radius: 4px; width: fit-content; max-width: 100%; }
-        
         .ai-header { background: rgba(15, 23, 42, 0.5); padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         .md-content { padding: 20px 25px; color: #cbd5e1; }
         .md-content h1, .md-content h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary); display: inline-block; }
@@ -47,7 +46,7 @@
         .md-content td { padding: 12px; border-bottom: 1px solid #334155; color: #cbd5e1; }
         .md-content pre { background: #020617; padding: 15px; border-radius: 8px; border: 1px solid #334155; overflow-x: auto; margin: 1rem 0; }
         .md-content code { font-family: 'Consolas', monospace; color: #f472b6; }
-
+        .md-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border); }
         .input-container { position: absolute; bottom: 25px; left: 0; right: 0; display: flex; justify-content: center; padding: 0 20px; z-index: 50; }
         .input-box { width: 100%; max-width: 850px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; display: flex; align-items: flex-end; padding: 10px 12px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); gap: 10px; transition: all 0.3s ease; }
         .input-box:focus-within { background: rgba(30, 41, 59, 0.9); border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3); }
@@ -57,22 +56,19 @@
         .icon-btn:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
         .send-btn { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
         .send-btn:hover { background: var(--primary-hover); transform: translateY(-2px); color: white; }
-
         .badge { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
         .badge-blue { color: #60a5fa; background: rgba(96, 165, 250, 0.1); padding: 4px 10px; border-radius: 6px; }
         .badge-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); padding: 4px 10px; border-radius: 6px; }
-        
+        .badge-green { color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 4px 10px; border-radius: 6px; }
         #authScreen { position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); padding: 40px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         .input-field { width: 100%; padding: 14px 16px; margin: 8px 0; background: #020617; border: 1px solid var(--border); color: white; border-radius: 12px; font-size: 15px; transition: 0.2s; }
         .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
         .btn-primary { width: 100%; padding: 14px; margin-top: 20px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
         .btn-primary:active { transform: scale(0.98); }
-
         .sidebar-item { padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: 0.2s; color: #cbd5e1; }
         .sidebar-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .sidebar-item.highlight { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px dashed rgba(99, 102, 241, 0.4); }
-
         #historyList { margin-top: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         .history-item { padding: 10px 14px; border-radius: 8px; font-size: 13px; color: #94a3b8; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .history-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
@@ -81,12 +77,10 @@
         .del-chat-btn { opacity: 0; color: #ef4444; padding: 4px; border-radius: 4px; font-size: 12px; transition: 0.2s; }
         .del-chat-btn:hover { background: rgba(239, 68, 68, 0.2); }
         .history-item:hover .del-chat-btn { opacity: 1; }
-
         .subject-bar-wrapper { padding: 15px 20px; display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(15, 23, 42, 0.4); }
         .btn-sub { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-sub); cursor: pointer; white-space: nowrap; transition: 0.2s; font-size: 13px; font-weight: 600; }
         .btn-sub:hover { background: rgba(255,255,255,0.05); color: white; }
         .btn-sub.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-        
         .mobile-header { display: none; }
         .sidebar-overlay { display: none; }
         @media (max-width: 768px) {
@@ -105,8 +99,6 @@
         .file-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; margin-bottom: 10px; background: #020617; border: 1px solid var(--border); border-radius: 10px; transition: 0.2s; }
         .file-item:hover { border-color: #64748b; }
         .file-name { font-weight: 500; font-size: 14px; }
-
-        /* --- CSS CHO QUIZ (ĐÃ XÓA CSS MINDMAP) --- */
         .quiz-container { background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-top: 10px; }
         .quiz-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #334155; }
         .quiz-item:last-child { border-bottom: none; }
@@ -118,6 +110,26 @@
         .quiz-opt.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981; }
         .quiz-opt.wrong { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; }
         .quiz-explain { margin-top: 10px; font-size: 13px; font-style: italic; color: #94a3b8; display: none; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; }
+        select.input-field { cursor: pointer; background-color: #020617; }
+        .teacher-section { margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); display: none; }
+        .teacher-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+        .exam-group { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2); }
+        .exam-group-header { padding: 10px 15px; background: #1e293b; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; color: #f1f5f9; transition: 0.2s; }
+        .exam-group-header:hover { background: #334155; }
+        .exam-group-body { display: none; padding: 5px; }
+        .exam-group.active .exam-group-body { display: block; }
+        .exam-group.active .exam-group-header { border-bottom: 1px solid var(--border); color: var(--primary); }
+        .manage-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; transition: 0.2s; }
+        .manage-item:hover { background: rgba(255,255,255,0.05); }
+        .manage-info { font-size: 12px; color: #cbd5e1; display: flex; flex-direction: column; overflow: hidden; }
+        .manage-info .sub-text { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .btn-delete { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: #ef4444; cursor: pointer; transition: 0.2s; }
+        .btn-delete:hover { background: rgba(239, 68, 68, 0.2); }
+        .search-box-wrapper { position: relative; margin-bottom: 10px; }
+        .search-box-wrapper i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 13px; }
+        .search-input { width: 100%; padding: 8px 10px 8px 32px; background: #020617; border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 13px; outline: none; }
+        .search-input:focus { border-color: var(--primary); }
+        .badge-grade { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(99, 102, 241, 0.2); color: #818cf8; margin-right: 6px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -137,7 +149,7 @@
                 </select>
                 <input id="code" class="input-field" placeholder="Mã Xác Thực (GV)" style="display:none;">
             </div>
-            <button class="btn-primary" onclick="auth()">Vào Lớp Ngay</button>
+            <button id="btnAuth" class="btn-primary" onclick="auth()">Đăng Nhập</button>
             <p onclick="toggleReg()" style="margin-top:20px; color:#cbd5e1; font-size:14px; cursor:pointer;"><span>Đăng ký</span> / Đăng nhập</p>
         </div>
     </div>
@@ -152,9 +164,10 @@
         <nav class="sidebar" id="sidebar">
             <h3 style="color:white; margin-bottom:20px; font-size: 20px; font-weight:700; display:flex; align-items:center; gap:12px;"><i class="fa-solid fa-robot" style="color:var(--primary);"></i> Học Cùng AI</h3>
             <div class="sidebar-item highlight" onclick="startNewChat()"><i class="fa-solid fa-plus"></i> Cuộc trò chuyện mới</div>
+            <div class="sidebar-item" onclick="openQuizModal()" style="color:#4ade80;"><i class="fa-solid fa-file-pen"></i> Luyện Đề Thi</div>
             <div style="margin-top:20px; margin-bottom:10px; font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Lịch sử</div>
             <div id="historyList"></div>
-            <div id="btnUpload" class="sidebar-item" style="display:none; margin-top: auto;" onclick="openUpload(); toggleMenu();"><i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu</div>
+            <div id="btnUpload" class="sidebar-item" style="display:none; margin-top: auto;" onclick="openRAGModal()"><i class="fa-solid fa-cloud-arrow-up"></i> Quản Lý Tài Liệu</div>
             <div style="margin-top:10px;">
                 <div style="padding:16px; background:#0f172a; border-radius:16px; border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
                     <div style="display:flex; align-items:center; gap:10px;">
@@ -168,14 +181,14 @@
         <main class="main">
            <div class="subject-bar-wrapper">
                 <button class="btn-sub active" onclick="sub('general',this)">Tổng hợp</button>
-                <button class="btn-sub" onclick="sub('math',this)">Toán</button>
-                <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
-                <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
+                <button class="btn-sub" onclick="sub('math',this)">Toán Học</button>
                 <button class="btn-sub" onclick="sub('physics',this)">Vật Lý</button>
                 <button class="btn-sub" onclick="sub('chemistry',this)">Hóa Học</button>
                 <button class="btn-sub" onclick="sub('biology',this)">Sinh Học</button>
+                <button class="btn-sub" onclick="sub('literature',this)">Ngữ Văn</button>
                 <button class="btn-sub" onclick="sub('history',this)">Lịch Sử</button>
                 <button class="btn-sub" onclick="sub('geography',this)">Địa Lý</button>
+                <button class="btn-sub" onclick="sub('english',this)">Tiếng Anh</button>
                 <button class="btn-sub" onclick="sub('gdcd',this)">GDCD</button>
                 <button class="btn-sub" onclick="sub('it',this)">Tin Học</button>
                 <button class="btn-sub" onclick="sub('technology',this)">Công Nghệ</button>
@@ -189,7 +202,7 @@
             </div>
             <div class="input-container">
                 <div class="input-box">
-                    <button class="icon-btn" onclick="openUpload()" title="Tải file đính kèm"><i class="fa-solid fa-paperclip"></i></button>
+                    <button class="icon-btn" onclick="openRAGModal()" title="Hỏi tài liệu (RAG)"><i class="fa-solid fa-paperclip"></i></button>
                     <textarea id="prompt" placeholder="Nhập câu hỏi của bạn tại đây..." oninput="autoResize(this)"></textarea>
                     <button class="icon-btn send-btn" onclick="send()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
@@ -208,18 +221,18 @@
                    <select id="upSub" class="input-field" style="margin:0; flex:1; cursor:pointer;">
                         <option value="general">Kiến thức chung</option>
                         <option value="math">Toán Học</option>
-                        <option value="literature">Ngữ Văn</option>
-                        <option value="english">Tiếng Anh</option>
                         <option value="physics">Vật Lý</option>
                         <option value="chemistry">Hóa Học</option>
                         <option value="biology">Sinh Học</option>
+                        <option value="literature">Ngữ Văn</option>
                         <option value="history">Lịch Sử</option>
                         <option value="geography">Địa Lý</option>
-                        <option value="gdcd">Giáo Dục Công Dân</option>
+                        <option value="english">Tiếng Anh</option>
+                        <option value="gdcd">GDCD</option>
                         <option value="it">Tin Học</option>
                         <option value="technology">Công Nghệ</option>
-                    </select>
-                    <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:12px; width:50px; cursor:pointer; transition:0.2s;"><i class="fa-solid fa-folder-plus"></i></button>
+                   </select>
+                   <button onclick="document.getElementById('file').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:12px; width:50px; cursor:pointer; transition:0.2s;"><i class="fa-solid fa-folder-plus"></i></button>
                 </div>
                 <input type="file" id="file" style="display: none;" onchange="document.getElementById('fileName').innerText = this.files[0]?.name || 'Chưa chọn file'">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -233,19 +246,109 @@
         </div>
     </div>
 
+    <div id="quizModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter: blur(8px); padding: 20px;">
+        <div class="auth-box" style="width:100%; max-width:500px; text-align:left; display:flex; flex-direction:column; max-height:85vh; padding: 25px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 20px; align-items: center; padding-bottom:15px; border-bottom:1px solid var(--border);">
+                <h3 style="color: white; margin: 0; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-file-pen"></i> Luyện Đề Thi</h3>
+                <i class="fa-solid fa-xmark" onclick="document.getElementById('quizModal').style.display='none'" style="cursor:pointer; color: #94a3b8; font-size: 24px; transition:0.2s;"></i>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:5px;">
+                <div style="flex:1;">
+                    <p style="color:#94a3b8; font-size:12px; margin-bottom:3px;">1. Chọn môn:</p>
+                    <select id="quizSubjectFilter" class="input-field" onchange="loadExamList()" style="margin:0;">
+                        <option value="all">Tất cả môn</option>
+                        <option value="math">Toán Học</option>
+                        <option value="physics">Vật Lý</option>
+                        <option value="chemistry">Hóa Học</option>
+                        <option value="biology">Sinh Học</option>
+                        <option value="literature">Ngữ Văn</option>
+                        <option value="history">Lịch Sử</option>
+                        <option value="geography">Địa Lý</option>
+                        <option value="english">Tiếng Anh</option>
+                        <option value="gdcd">GDCD</option>
+                        <option value="it">Tin Học</option>
+                        <option value="technology">Công Nghệ</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <p style="color:#94a3b8; font-size:12px; margin-bottom:3px;">2. Chọn lớp:</p>
+                    <select id="quizGradeFilter" class="input-field" onchange="loadExamList()" style="margin:0;">
+                        <option value="all">Tất cả lớp</option>
+                        <option value="12">Lớp 12</option>
+                        <option value="11">Lớp 11</option>
+                        <option value="10">Lớp 10</option>
+                    </select>
+                </div>
+            </div>
+
+            <p style="color:#94a3b8; font-size:12px; margin-bottom:3px; margin-top:10px;">3. Chọn đề thi:</p>
+            <select id="examSelect" class="input-field" style="margin-bottom:20px;">
+                <option value="">-- Vui lòng chọn môn & lớp --</option>
+            </select>
+
+            <button onclick="takeQuiz()" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); margin-top:10px;">
+                <i class="fa-solid fa-play"></i> BẮT ĐẦU LÀM BÀI
+            </button>
+            <p id="quizStt" style="margin-top:10px; font-size:13px; font-weight:600; color:var(--primary); text-align:center; min-height:20px;"></p>
+
+            <div id="teacherUploadSection" class="teacher-section">
+                <div class="teacher-title"><i class="fa-solid fa-user-tie"></i> Quản Lý Đề Thi (Giáo Viên)</div>
+                
+                <div style="background: #0f172a; padding: 15px; border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 15px;">
+                    <p style="font-size:12px; color:#cbd5e1; margin-bottom:8px;">Upload đề mới:</p>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <select id="newExamSubject" class="input-field" style="margin:0; width:35%;">
+                            <option value="math">Toán</option>
+                            <option value="physics">Lý</option>
+                            <option value="chemistry">Hóa</option>
+                            <option value="biology">Sinh</option>
+                            <option value="literature">Văn</option>
+                            <option value="history">Sử</option>
+                            <option value="geography">Địa</option>
+                            <option value="english">Anh</option>
+                            <option value="gdcd">GDCD</option>
+                            <option value="it">Tin</option>
+                            <option value="technology">CN</option>
+                        </select>
+                        <select id="newExamGrade" class="input-field" style="margin:0; width:25%;">
+                            <option value="12">12</option>
+                            <option value="11">11</option>
+                            <option value="10">10</option>
+                        </select>
+                        <input type="file" id="newExamFile" style="display:none;" onchange="document.getElementById('newExamName').innerText = this.files[0]?.name || '...'">
+                        <button onclick="document.getElementById('newExamFile').click()" style="background:#334155; border:1px solid #475569; color:white; border-radius:8px; padding:0 5px; cursor:pointer; flex:1; font-size:11px;">File</button>
+                        <button onclick="uploadExam()" style="background:var(--primary); border:none; color:white; border-radius:8px; padding:0 10px; cursor:pointer; font-size:12px;">Up</button>
+                    </div>
+                    <span id="newExamName" style="font-size:11px; color:#94a3b8; font-style:italic; display:block; text-align:right;">Chưa chọn file...</span>
+                </div>
+
+                <p style="font-size:12px; color:#cbd5e1; margin-bottom:8px; font-weight:600;">Danh sách file đã lưu:</p>
+                <div class="search-box-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="examSearchInput" class="search-input" placeholder="Tìm kiếm tên file..." oninput="filterTeacherExams()">
+                </div>
+                <div id="teacherExamList" class="file-list" style="max-height:200px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currUser=null, currSub='general', isReg=false, currentChatId = null;
-        // ĐÃ XÓA mermaid.initialize
+        let allTeacherExams = [];
 
         function autoResize(el) { el.style.height='48px'; el.style.height=Math.min(el.scrollHeight,150)+'px'; }
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
-        function toggleReg() { isReg=!isReg; document.getElementById('reg').style.display=isReg?'block':'none'; }
+       function toggleReg() { 
+            isReg=!isReg; 
+            document.getElementById('reg').style.display=isReg?'block':'none';
+            document.getElementById('btnAuth').innerText = isReg ? "Đăng Ký" : "Đăng Nhập";
+        }
         function toggleCode() { document.getElementById('code').style.display = document.getElementById('role').value==='teacher'?'block':'none'; }
 
         async function auth() {
             const u=document.getElementById('u').value.trim(); const p=document.getElementById('p').value.trim();
             if(u.length < 4) return alert("Tên đăng nhập quá ngắn!");
-            if(p.length < 6) return alert("Mật khẩu phải từ 6 ký tự!");
             const body = { username:u, password:p, role:'student', secretCode:'' };
             if(isReg) { body.role=document.getElementById('role').value; body.secretCode=document.getElementById('code').value; }
             try { const res = await fetch(isReg?'/register':'/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const d = await res.json(); if(d.success) { if(isReg){ alert('Đăng ký xong! Mời đăng nhập.'); toggleReg(); } else { login(d.user); } } else alert(d.error); } catch { alert('Lỗi mạng'); }
@@ -254,7 +357,12 @@
         function login(u) { 
             currUser=u; localStorage.setItem('u',JSON.stringify(u)); document.getElementById('authScreen').style.display='none'; document.getElementById('app').style.display='flex'; 
             document.getElementById('uName').innerText=u.username; document.getElementById('uRole').innerText = u.role === 'teacher' ? 'Teacher' : 'Student';
-            document.getElementById('btnUpload').style.display=u.role==='teacher'?'flex':'none'; loadHistory();
+            
+            const isTeacher = u.role === 'teacher';
+            document.getElementById('btnUpload').style.display=isTeacher?'flex':'none';
+            document.getElementById('teacherUploadSection').style.display=isTeacher?'block':'none';
+            
+            loadHistory();
         }
         function logout() { localStorage.removeItem('u'); location.reload(); }
         window.onload=()=>{ if(localStorage.getItem('u')) login(JSON.parse(localStorage.getItem('u'))); }
@@ -267,28 +375,35 @@
         }
         async function deleteChat(chatId, event) {
             event.stopPropagation(); if(!confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?")) return;
-            try { const res = await fetch('/delete-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chatId: chatId, username: currUser.username }) }); const d = await res.json(); if(d.success) { if (currentChatId == chatId) startNewChat(); else loadHistory(); } else alert(d.error); } catch(e) { alert("Lỗi khi xóa!"); }
+            try { await fetch('/delete-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chatId: chatId, username: currUser.username }) }); if (currentChatId == chatId) startNewChat(); else loadHistory(); } catch(e) {}
         }
         function startNewChat() {
             currentChatId = null; document.getElementById('chat').innerHTML = `<div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;"><div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);"><i class="fa-solid fa-graduation-cap"></i></div><h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2><p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.</p></div>`; loadHistory(); if(window.innerWidth <= 768) toggleMenu();
         }
-
         async function loadChatContent(id) {
             currentChatId = id; if(window.innerWidth <= 768) toggleMenu(); loadHistory(); 
             try { const res = await fetch(`/chat-detail?id=${id}`); const chatData = await res.json(); if(!chatData) return;
                 const chatDiv = document.getElementById('chat'); chatDiv.innerHTML = ''; 
                 chatData.messages.forEach(msg => {
-                    if(msg.role === 'user') chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`;
-                    else {
+                    if(msg.role === 'user') {
+                        chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`;
+                    } else {
                         const msgId = 'msg-' + Math.random().toString(36).substr(2, 9);
-                        chatDiv.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}"><div class="md-content">${marked.parse(msg.content)}</div></div></div>`;
+                        let headerHTML = "";
+                        if (msg.hasOwnProperty('isFallback')) {
+                            headerHTML = msg.isFallback 
+                                ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` 
+                                : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
+                        } else {
+                            headerHTML = `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
+                        }
+                        chatDiv.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(msg.content)}</div></div></div>`;
                         setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100);
                     }
                 });
                 chatDiv.scrollTop = chatDiv.scrollHeight;
             } catch(e) { console.error(e); }
         }
-
         async function send() {
             const el=document.getElementById('prompt'); const txt=el.value.trim(); if(!txt)return;
             const chat=document.getElementById('chat'); const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove();
@@ -299,25 +414,184 @@
                 const res=await fetch('/ask-ai',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
                 const d=await res.json(); document.getElementById(loadId).remove();
                 if(d.chatId) { currentChatId = d.chatId; loadHistory(); }
-                
                 const msgId = 'msg-' + Date.now();
-                let headerHTML = d.isFallback ? `<span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span>` : `<span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Sách Giáo Khoa</span>`;
                 
-                chat.innerHTML+=`<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}"><div class="ai-header">${headerHTML}</div><div class="md-content">${marked.parse(d.answer)}</div></div></div>`;
+                let headerHTML = d.isFallback 
+                    ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` 
+                    : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
                 
-                setTimeout(() => { 
-                    renderRichContent(msgId);
-                    renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
-                }, 100);
-                
+                chat.innerHTML+=`<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(d.answer)}</div></div></div>`;
+                setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100);
                 chat.scrollTop=chat.scrollHeight;
             } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444; padding:10px;">Lỗi kết nối server!</span>'; }
         }
 
-        // --- HÀM XỬ LÝ NỘI DUNG (ĐÃ XÓA MINDMAP) ---
+        // --- RAG UPLOAD ---
+        function openRAGModal(){ document.getElementById('modal').style.display='flex'; loadFiles(); }
+        async function loadFiles() {
+            const res = await fetch('/list-files'); const files = await res.json(); const container = document.getElementById('fileListContainer');
+            if(files.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>'; return; }
+            container.innerHTML = files.map(f => {
+                const delBtn = (currUser && currUser.role === 'teacher') ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` : '';
+                return `<div class="file-item"><div style="display:flex; align-items:center; gap:12px; overflow:hidden;"><div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div><div style="display:flex; flex-direction:column; overflow:hidden;"><span class="file-name" style="color:#f1f5f9;">${f.name}</span><span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span></div></div>${delBtn}</div>`;
+            }).join('');
+        }
+        async function deleteFile(n) { if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { try { await fetch('/delete-file', { method:'POST', headers:{'role': currUser.role, 'Content-Type':'application/json'}, body:JSON.stringify({filename:n}) }); loadFiles(); } catch { alert("Lỗi khi xóa!"); } } }
+        async function doUpload() {
+            const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!');
+            const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);
+            const stt = document.getElementById('stt'); stt.innerText='Đang tải lên...'; stt.style.color='#f59e0b';
+            try { const r=await fetch('/upload-doc',{method:'POST',body:fd}); const d=await r.json(); if(d.success) { stt.innerText='Thành công!'; stt.style.color='#10b981'; loadFiles(); } else { stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444'; } } catch{alert('Lỗi mạng');}
+        }
+
+        // --- LUYỆN ĐỀ (MỚI) ---
+        function openQuizModal() { document.getElementById('quizModal').style.display='flex'; loadExamList(); }
+
+        const subjectMap = {
+            math: "Toán Học", physics: "Vật Lý", chemistry: "Hóa Học", biology: "Sinh Học",
+            literature: "Ngữ Văn", history: "Lịch Sử", geography: "Địa Lý", english: "Tiếng Anh",
+            gdcd: "GDCD", it: "Tin Học", technology: "Công Nghệ"
+        };
+
+        async function loadExamList() {
+            const sub = document.getElementById('quizSubjectFilter').value;
+            const grade = document.getElementById('quizGradeFilter').value;
+            const select = document.getElementById('examSelect');
+            select.innerHTML = '<option>Đang tải...</option>';
+            try {
+                // 1. GỌI API
+                const url = currUser.role === 'teacher' ? `/list-exams?subject=all` : `/list-exams?subject=${sub}&grade=${grade}`;
+                const res = await fetch(url);
+                const list = await res.json();
+
+                // 2. XỬ LÝ DROPDOWN
+                const filteredListForDropdown = list.filter(e => {
+                    const matchSub = (sub === 'all') || (e.subject === sub);
+                    const matchGrade = (grade === 'all') || (e.grade === grade);
+                    return matchSub && matchGrade;
+                });
+
+                if(filteredListForDropdown.length === 0) {
+                    select.innerHTML = '<option value="">-- Không có đề --</option>';
+                } else {
+                    select.innerHTML = filteredListForDropdown.map(e => {
+                        const subName = subjectMap[e.subject] || e.subject;
+                        return `<option value="${e._id}">(${subName} ${e.grade}) ${e.filename}</option>`;
+                    }).join('');
+                }
+                
+                // 3. XỬ LÝ LIST QUẢN LÝ (GV)
+                if(currUser.role === 'teacher') {
+                    allTeacherExams = list; 
+                    renderGroupedExams(list); 
+                }
+                
+            } catch (e) { select.innerHTML = '<option>Lỗi tải danh sách</option>'; }
+        }
+
+        function renderGroupedExams(list) {
+            const div = document.getElementById('teacherExamList');
+            if (!list || list.length === 0) {
+                div.innerHTML = '<div style="text-align:center; color:#64748b; font-size:12px; padding:10px;">Chưa có file nào</div>';
+                return;
+            }
+
+            const grouped = {};
+            list.forEach(item => {
+                if (!grouped[item.subject]) grouped[item.subject] = [];
+                grouped[item.subject].push(item);
+            });
+
+            let html = '';
+            Object.keys(grouped).sort().forEach(subKey => {
+                const items = grouped[subKey];
+                const subName = subjectMap[subKey] || subKey.toUpperCase();
+                
+                const itemsHtml = items.map(e => `
+                    <div class="manage-item">
+                        <div class="manage-info">
+                            <span style="font-weight:500;">
+                                <span class="badge-grade">Lớp ${e.grade}</span>
+                                ${e.filename}
+                            </span>
+                            <span class="sub-text"><i class="fa-regular fa-clock"></i> ${new Date(e.uploadedAt).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <i class="fa-solid fa-trash-can btn-delete" onclick="deleteExam('${e._id}')"></i>
+                    </div>
+                `).join('');
+
+                html += `
+                <div class="exam-group">
+                    <div class="exam-group-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span><i class="fa-solid fa-folder-open" style="color:#facc15; margin-right:8px;"></i> ${subName}</span>
+                        <span class="badge" style="background:#334155; color:white; font-size:11px;">${items.length}</span>
+                    </div>
+                    <div class="exam-group-body">${itemsHtml}</div>
+                </div>`;
+            });
+            div.innerHTML = html;
+        }
+
+        function filterTeacherExams() {
+            const keyword = document.getElementById('examSearchInput').value.toLowerCase();
+            const filtered = allTeacherExams.filter(e => 
+                e.filename.toLowerCase().includes(keyword) || 
+                (subjectMap[e.subject] && subjectMap[e.subject].toLowerCase().includes(keyword))
+            );
+            renderGroupedExams(filtered);
+            if(keyword) document.querySelectorAll('.exam-group').forEach(el => el.classList.add('active'));
+        }
+
+        async function deleteExam(id) {
+            if(!confirm("Xóa đề thi này?")) return;
+            try {
+                const res = await fetch('/delete-exam', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ role: currUser.role, examId: id }) });
+                if((await res.json()).success) { alert("Đã xóa!"); loadExamList(); } else alert("Lỗi xóa!");
+            } catch { alert("Lỗi mạng!"); }
+        }
+
+        async function uploadExam() {
+            const f = document.getElementById('newExamFile').files[0];
+            if(!f) return alert("Chưa chọn file!");
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('role', currUser.role);
+            fd.append('subject', document.getElementById('newExamSubject').value);
+            fd.append('grade', document.getElementById('newExamGrade').value);
+            
+            document.getElementById('quizStt').innerText = "Đang xử lý & tạo đề... (20-40s)";
+            try {
+                const res = await fetch('/upload-exam', { method: 'POST', body: fd });
+                const d = await res.json();
+                if(d.success) { alert("Thành công!"); loadExamList(); document.getElementById('quizStt').innerText = ""; } else alert(d.error);
+            } catch { alert("Lỗi mạng!"); }
+        }
+
+        async function takeQuiz() {
+            const id = document.getElementById('examSelect').value;
+            if(!id) return alert("Vui lòng chọn đề thi!");
+            document.getElementById('quizStt').innerText = "Đang tải bài thi...";
+            try {
+                const res = await fetch('/take-quiz', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({examId: id}) });
+                const d = await res.json();
+                if(d.success) {
+                    document.getElementById('quizModal').style.display = 'none';
+                    const chat = document.getElementById('chat');
+                    const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove();
+                    const msgId = 'msg-' + Date.now();
+                    const content = `\`\`\`json-quiz\n${JSON.stringify(d.data)}\n\`\`\``;
+                    chat.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}"><div class="ai-header"><span class="badge badge-green"><i class="fa-solid fa-check-circle"></i> Bắt đầu làm bài</span></div><div class="md-content">${marked.parse(content)}</div></div></div>`;
+                    setTimeout(() => renderRichContent(document.getElementById(msgId)), 100);
+                    chat.scrollTop = chat.scrollHeight;
+                    document.getElementById('quizStt').innerText = "";
+                } else { alert("Lỗi: " + d.error); document.getElementById('quizStt').innerText = ""; }
+            } catch { alert("Lỗi kết nối"); }
+        }
+
+        // --- RENDER QUIZ UI ---
         function renderRichContent(containerId) {
-            const container = document.getElementById(containerId); if (!container) return;
-            // 1. Quiz (Chỉ còn lại Quiz)
+            const container = (typeof containerId === 'string') ? document.getElementById(containerId) : containerId;
+            if (!container) return;
             container.querySelectorAll('pre code.language-json-quiz').forEach(cb => {
                 try {
                     const data = JSON.parse(cb.textContent);
@@ -325,7 +599,7 @@
                     data.forEach((q, idx) => {
                         let optsHTML = '';
                         q.options.forEach((opt, oIdx) => {
-                            optsHTML += `<div class="quiz-opt" onclick="checkAnswer(this, ${oIdx}, ${q.correct}, '${q.explain.replace(/'/g, "\\'")}')"><div style="width:24px; height:24px; border-radius:50%; border:1px solid #64748b; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${String.fromCharCode(65+oIdx)}</div>${opt}</div>`;
+                            optsHTML += `<div class="quiz-opt" onclick="checkAnswer(this, ${oIdx}, ${q.correct}, '${(q.explain||'').replace(/'/g, "\\'")}')"><div style="width:24px; height:24px; background:#334155; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${String.fromCharCode(65+oIdx)}</div>${opt}</div>`;
                         });
                         const qDiv = document.createElement('div'); qDiv.className = 'quiz-item';
                         qDiv.innerHTML = `<div class="quiz-question">Câu ${idx + 1}: ${q.question}</div><div class="quiz-options">${optsHTML}</div><div class="quiz-explain"></div>`;
@@ -342,23 +616,6 @@
             if (sIdx === cIdx) { el.classList.add('correct'); el.innerHTML += ' <i class="fa-solid fa-check"></i>'; }
             else { el.classList.add('wrong'); el.innerHTML += ' <i class="fa-solid fa-xmark"></i>'; opts[cIdx].classList.add('correct'); }
             const exDiv = p.parentElement.querySelector('.quiz-explain'); if(exDiv) { exDiv.style.display = 'block'; exDiv.innerHTML = `<strong>Giải thích:</strong> ${explain}`; }
-        }
-
-        function openUpload(){ document.getElementById('modal').style.display='flex'; loadFiles(); }
-        async function loadFiles() {
-            const res = await fetch('/list-files'); const files = await res.json(); const container = document.getElementById('fileListContainer');
-            if(files.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>'; return; }
-            container.innerHTML = files.map(f => {
-                const delBtn = (currUser && currUser.role === 'teacher') ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` : '';
-                return `<div class="file-item"><div style="display:flex; align-items:center; gap:12px; overflow:hidden;"><div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div><div style="display:flex; flex-direction:column; overflow:hidden;"><span class="file-name" style="color:#f1f5f9;">${f.name}</span><span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span></div></div>${delBtn}</div>`;
-            }).join('');
-        }
-        async function deleteFile(n) { if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { try { await fetch('/delete-file', { method:'POST', headers:{'role': currUser.role, 'Content-Type':'application/json'}, body:JSON.stringify({filename:n}) }); loadFiles(); } catch { alert("Lỗi khi xóa!"); } } }
-        async function doUpload() {
-            const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!');
-            const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);
-            const stt = document.getElementById('stt'); stt.innerText='Đang tải lên...'; stt.style.color='#f59e0b';
-            try { const r=await fetch('/upload-doc',{method:'POST',body:fd}); const d=await r.json(); if(d.success) { stt.innerText='Upload thành công!'; stt.style.color='#10b981'; document.getElementById('file').value = ''; loadFiles(); } else { stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444'; } } catch{alert('Lỗi mạng');}
         }
     </script>
 </body>
