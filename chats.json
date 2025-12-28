@@ -1,0 +1,61 @@
+[
+  {
+    "id": 1766803484226,
+    "username": "3242342",
+    "title": "324324",
+    "timestamp": 1766803509567,
+    "subject": "general",
+    "messages": [
+      {
+        "role": "user",
+        "content": "324324"
+      },
+      {
+        "role": "ai",
+        "content": "Chào em,\n\nDường như em đã nhập một dãy số không phải là câu hỏi. Để thầy có thể giúp đỡ, em vui lòng đặt câu hỏi rõ ràng hơn nhé! Em có thể hỏi về các thông tin trong **DỮ LIỆU THAM KHẢO** (như cập nhật nội dung địa lí lớp 12, diện tích rừng, vị trí các điểm cực, hoặc các tỉnh giáp biển) hoặc bất kỳ câu hỏi nào khác liên quan đến môn học.\n\nThầy sẵn lòng hỗ trợ em!"
+      },
+      {
+        "role": "user",
+        "content": "Diện tích việt nam là gì"
+      },
+      {
+        "role": "ai",
+        "content": "Chào em,\n\nDựa trên dữ liệu tham khảo được cung cấp, không có thông tin về **tổng diện tích của Việt Nam**.\n\n⚠️ **Thông tin có thể sai lệch!**\nTuy nhiên, theo kiến thức địa lí chung, **tổng diện tích của Việt Nam** là khoảng **331.212 km²** (kilômét vuông)."
+      }
+    ]
+  },
+  {
+    "id": 1766895718332,
+    "username": "Nhatquan",
+    "title": "uki",
+    "timestamp": 1766895718332,
+    "subject": "general",
+    "messages": [
+      {
+        "role": "user",
+        "content": "uki"
+      },
+      {
+        "role": "ai",
+        "content": "**⚠️ Thông tin có thể sai lệch!:**\n\nTừ \"uki\" không xuất hiện trong **DỮ LIỆU THAM KHẢO** đã được cung cấp."
+      }
+    ]
+  },
+  {
+    "id": 1766895761437,
+    "username": "3242343",
+    "title": "bản đồ hành chính việt nam",
+    "timestamp": 1766895761437,
+    "subject": "general",
+    "messages": [
+      {
+        "role": "user",
+        "content": "bản đồ hành chính việt nam"
+      },
+      {
+        "role": "ai",
+        "content": "Dưới đây là thông tin cập nhật về bản đồ hành chính Việt Nam:\n\n*   Việt Nam hiện có **34 tỉnh và thành phố**.\n*   Các địa danh huyện đảo được cập nhật:\n    *   **Đặc khu Hoàng Sa, TP. Đà Nẵng, Việt Nam**.\n    *   **Đặc khu Trường Sa, tỉnh Khánh Hòa, Việt Nam**.\n*   Nước ta có **21 tỉnh, thành phố giáp biển**, bao gồm:\n    *   Quảng Ninh, TP. Hải Phòng, Hưng Yên, Ninh Bình, Thanh Hoá, Nghệ An, Hà Tĩnh, Quảng Trị, TP. Huế, TP. Đà Nẵng, Quảng Ngãi, Gia Lai, Đắk Lắk, Khánh Hoà, Lâm Đồng, TP. Hồ Chí Minh, Đồng Tháp, Vĩnh Long, TP. Cần Thơ, Cà Mau, An Giang.\n*   Việt Nam có **21 tỉnh giáp biên giới** trên đất liền:\n    *   Giáp **Trung Quốc**: **7 tỉnh** (Điện Biên, Lai Châu, Lào Cai, Tuyên Quang, Cao Bằng, Lạng Sơn, Quảng Ninh).\n    *   Giáp **Lào**: **9 tỉnh, thành phố** (Điện Biên, Sơn La, Hoà Bình, Thanh Hoá, Nghệ An, Hà Tĩnh, Quảng Trị, TP. Huế, TP. Đà Nẵng, Quảng Ngãi).\n    *   Giáp **Campuchia**: **7 tỉnh** (Quảng Ngãi, Gia Lai, Đắk Lắk, Lâm Đồng, Đồng Nai, Tây Ninh, Đồng Tháp, An Giang).\n*   Các **đặc khu** và tỉnh/thành phố trực thuộc:\n\n| STT | Đặc khu           | Thuộc tỉnh, thành phố |\n| :-- | :---------------- | :-------------------- |\n| 1   | **Vân Đồn**       | Quảng Ninh           |\n| 2   | **Cô Tô**         | Quảng Ninh           |\n| 3   | **Cát Hải**       | TP. Hải Phòng        |\n| 4   | **Bạch Long Vỹ**  | TP. Hải Phòng        |\n| 5   | **Cồn Cỏ**        | Quảng Trị            |\n| 6   | **Lý Sơn**        | Quảng Ngãi           |\n| 7   | **Hoàng Sa**      | TP. Đà Nẵng          |\n| 8   | **Trường Sa**     | Khánh Hòa            |\n| 9   | **Phú Quý**       | Lâm Đồng             |\n| 10  | **Côn Đảo**       | TP. Hồ Chí Minh      |\n| 11  | **Kiên Hải**      | An Giang             |\n| 12  | **Phú Quốc**      | An Giang             |\n| 13  | **Thổ Châu**      | An Giang             |"
+      }
+    ]
+  }
+]
