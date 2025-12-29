@@ -4,14 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Học Cùng AI - Pro</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 
     <style>
+        /* GIỮ NGUYÊN CSS CŨ */
         :root { --bg-body: #0f172a; --bg-panel: #1e293b; --bg-bubble-ai: #1e293b; --bg-bubble-user: #4f46e5; --primary: #6366f1; --primary-hover: #4338ca; --text-main: #f8fafc; --text-sub: #94a3b8; --border: #334155; --danger: #ef4444; --font-main: 'Inter', sans-serif; }
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font-main); background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; font-size: 15px; }
@@ -130,6 +137,9 @@
         .search-input { width: 100%; padding: 8px 10px 8px 32px; background: #020617; border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 13px; outline: none; }
         .search-input:focus { border-color: var(--primary); }
         .badge-grade { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(99, 102, 241, 0.2); color: #818cf8; margin-right: 6px; font-weight: 600; }
+        
+        /* CLASS ĐỂ CROP ẢNH PDF */
+        .crop-canvas { max-width: 100%; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -336,16 +346,19 @@
     <script>
         let currUser=null, currSub='general', isReg=false, currentChatId = null;
         let allTeacherExams = [];
+        let currentExamImages = []; // Lưu ảnh các trang PDF để cắt
 
         function autoResize(el) { el.style.height='48px'; el.style.height=Math.min(el.scrollHeight,150)+'px'; }
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
-       function toggleReg() { 
+        
+        function toggleReg() { 
             isReg=!isReg; 
             document.getElementById('reg').style.display=isReg?'block':'none';
             document.getElementById('btnAuth').innerText = isReg ? "Đăng Ký" : "Đăng Nhập";
         }
         function toggleCode() { document.getElementById('code').style.display = document.getElementById('role').value==='teacher'?'block':'none'; }
 
+        // --- AUTH & CHAT LOGIC (Giữ nguyên) ---
         async function auth() {
             const u=document.getElementById('u').value.trim(); const p=document.getElementById('p').value.trim();
             if(u.length < 4) return alert("Tên đăng nhập quá ngắn!");
@@ -353,105 +366,23 @@
             if(isReg) { body.role=document.getElementById('role').value; body.secretCode=document.getElementById('code').value; }
             try { const res = await fetch(isReg?'/register':'/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const d = await res.json(); if(d.success) { if(isReg){ alert('Đăng ký xong! Mời đăng nhập.'); toggleReg(); } else { login(d.user); } } else alert(d.error); } catch { alert('Lỗi mạng'); }
         }
-
-        function login(u) { 
-            currUser=u; localStorage.setItem('u',JSON.stringify(u)); document.getElementById('authScreen').style.display='none'; document.getElementById('app').style.display='flex'; 
-            document.getElementById('uName').innerText=u.username; document.getElementById('uRole').innerText = u.role === 'teacher' ? 'Teacher' : 'Student';
-            
-            const isTeacher = u.role === 'teacher';
-            document.getElementById('btnUpload').style.display=isTeacher?'flex':'none';
-            document.getElementById('teacherUploadSection').style.display=isTeacher?'block':'none';
-            
-            loadHistory();
-        }
+        function login(u) { currUser=u; localStorage.setItem('u',JSON.stringify(u)); document.getElementById('authScreen').style.display='none'; document.getElementById('app').style.display='flex'; document.getElementById('uName').innerText=u.username; document.getElementById('uRole').innerText = u.role === 'teacher' ? 'Teacher' : 'Student'; const isTeacher = u.role === 'teacher'; document.getElementById('btnUpload').style.display=isTeacher?'flex':'none'; document.getElementById('teacherUploadSection').style.display=isTeacher?'block':'none'; loadHistory(); }
         function logout() { localStorage.removeItem('u'); location.reload(); }
         window.onload=()=>{ if(localStorage.getItem('u')) login(JSON.parse(localStorage.getItem('u'))); }
-
         function sub(s, el) { currSub=s; document.querySelectorAll('.btn-sub').forEach(b=>b.classList.remove('active')); el.classList.add('active'); el.scrollIntoView({behavior: "smooth", inline: "center"}); if(document.getElementById('chat').innerHTML.trim() !== "") { document.getElementById('chat').innerHTML+=`<div style="text-align:center; font-size:12px; color:#64748b; margin:20px 0;"><span style="background:#1e293b; padding:6px 16px; border-radius:20px; border:1px solid #334155;">Đã chuyển chủ đề: ${s.toUpperCase()}</span></div>`; const chat=document.getElementById('chat'); chat.scrollTop=chat.scrollHeight; } }
-
-        async function loadHistory() {
-            if(!currUser) return;
-            try { const res = await fetch(`/history?username=${currUser.username}`); const chats = await res.json(); const list = document.getElementById('historyList'); list.innerHTML = chats.map(c => `<div class="history-item ${c.id == currentChatId ? 'active' : ''}" onclick="loadChatContent('${c.id}')"><div class="history-title"><i class="fa-regular fa-message"></i> ${c.title}</div><i class="fa-solid fa-trash del-chat-btn" onclick="deleteChat('${c.id}', event)" title="Xóa"></i></div>`).join(''); } catch(e) { console.error(e); }
-        }
-        async function deleteChat(chatId, event) {
-            event.stopPropagation(); if(!confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?")) return;
-            try { await fetch('/delete-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chatId: chatId, username: currUser.username }) }); if (currentChatId == chatId) startNewChat(); else loadHistory(); } catch(e) {}
-        }
-        function startNewChat() {
-            currentChatId = null; document.getElementById('chat').innerHTML = `<div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;"><div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);"><i class="fa-solid fa-graduation-cap"></i></div><h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2><p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.</p></div>`; loadHistory(); if(window.innerWidth <= 768) toggleMenu();
-        }
-        async function loadChatContent(id) {
-            currentChatId = id; if(window.innerWidth <= 768) toggleMenu(); loadHistory(); 
-            try { const res = await fetch(`/chat-detail?id=${id}`); const chatData = await res.json(); if(!chatData) return;
-                const chatDiv = document.getElementById('chat'); chatDiv.innerHTML = ''; 
-                chatData.messages.forEach(msg => {
-                    if(msg.role === 'user') {
-                        chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`;
-                    } else {
-                        const msgId = 'msg-' + Math.random().toString(36).substr(2, 9);
-                        let headerHTML = "";
-                        if (msg.hasOwnProperty('isFallback')) {
-                            headerHTML = msg.isFallback 
-                                ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` 
-                                : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
-                        } else {
-                            headerHTML = `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
-                        }
-                        chatDiv.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(msg.content)}</div></div></div>`;
-                        setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100);
-                    }
-                });
-                chatDiv.scrollTop = chatDiv.scrollHeight;
-            } catch(e) { console.error(e); }
-        }
-        async function send() {
-            const el=document.getElementById('prompt'); const txt=el.value.trim(); if(!txt)return;
-            const chat=document.getElementById('chat'); const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove();
-            chat.innerHTML+=`<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${txt}</div></div>`; el.value=''; el.style.height='48px'; chat.scrollTop=chat.scrollHeight;
-            const loadId = 'ld'+Date.now(); chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="padding:15px; color:#94a3b8; font-style:italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang suy nghĩ...</div></div>`; chat.scrollTop=chat.scrollHeight;
-            try {
-                const payload = { prompt: txt, subject: currSub, username: currUser ? currUser.username : null, chatId: currentChatId };
-                const res=await fetch('/ask-ai',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-                const d=await res.json(); document.getElementById(loadId).remove();
-                if(d.chatId) { currentChatId = d.chatId; loadHistory(); }
-                const msgId = 'msg-' + Date.now();
-                
-                let headerHTML = d.isFallback 
-                    ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` 
-                    : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`;
-                
-                chat.innerHTML+=`<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(d.answer)}</div></div></div>`;
-                setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100);
-                chat.scrollTop=chat.scrollHeight;
-            } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444; padding:10px;">Lỗi kết nối server!</span>'; }
-        }
-
-        // --- RAG UPLOAD ---
+        async function loadHistory() { if(!currUser) return; try { const res = await fetch(`/history?username=${currUser.username}`); const chats = await res.json(); const list = document.getElementById('historyList'); list.innerHTML = chats.map(c => `<div class="history-item ${c.id == currentChatId ? 'active' : ''}" onclick="loadChatContent('${c.id}')"><div class="history-title"><i class="fa-regular fa-message"></i> ${c.title}</div><i class="fa-solid fa-trash del-chat-btn" onclick="deleteChat('${c.id}', event)" title="Xóa"></i></div>`).join(''); } catch(e) { console.error(e); } }
+        async function deleteChat(chatId, event) { event.stopPropagation(); if(!confirm("Bạn có chắc muốn xóa cuộc trò chuyện này?")) return; try { await fetch('/delete-chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chatId: chatId, username: currUser.username }) }); if (currentChatId == chatId) startNewChat(); else loadHistory(); } catch(e) {} }
+        function startNewChat() { currentChatId = null; document.getElementById('chat').innerHTML = `<div id="welcomeMsg" style="text-align:center; margin-top:80px; opacity:0.8;"><div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 50%; margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--primary); border: 2px solid var(--border); box-shadow: 0 0 30px rgba(99,102,241,0.2);"><i class="fa-solid fa-graduation-cap"></i></div><h2 style="color: white; margin-bottom: 10px;">Xin chào!</h2><p style="color: var(--text-sub); max-width: 400px; margin: 0 auto; line-height: 1.5;">Hãy chọn môn học và đặt câu hỏi. AI sẽ trả lời bạn.</p></div>`; loadHistory(); if(window.innerWidth <= 768) toggleMenu(); }
+        async function loadChatContent(id) { currentChatId = id; if(window.innerWidth <= 768) toggleMenu(); loadHistory(); try { const res = await fetch(`/chat-detail?id=${id}`); const chatData = await res.json(); if(!chatData) return; const chatDiv = document.getElementById('chat'); chatDiv.innerHTML = ''; chatData.messages.forEach(msg => { if(msg.role === 'user') { chatDiv.innerHTML += `<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${msg.content}</div></div>`; } else { const msgId = 'msg-' + Math.random().toString(36).substr(2, 9); let headerHTML = ""; if (msg.hasOwnProperty('isFallback')) { headerHTML = msg.isFallback ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`; } else { headerHTML = `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i> Tài liệu đã xác minh </span></div>`; } chatDiv.innerHTML += `<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(msg.content)}</div></div></div>`; setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100); } }); chatDiv.scrollTop = chatDiv.scrollHeight; } catch(e) { console.error(e); } }
+        async function send() { const el=document.getElementById('prompt'); const txt=el.value.trim(); if(!txt)return; const chat=document.getElementById('chat'); const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove(); chat.innerHTML+=`<div class="msg user"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="bubble">${txt}</div></div>`; el.value=''; el.style.height='48px'; chat.scrollTop=chat.scrollHeight; const loadId = 'ld'+Date.now(); chat.innerHTML+=`<div class="msg ai" id="${loadId}"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" style="padding:15px; color:#94a3b8; font-style:italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang suy nghĩ...</div></div>`; chat.scrollTop=chat.scrollHeight; try { const payload = { prompt: txt, subject: currSub, username: currUser ? currUser.username : null, chatId: currentChatId }; const res=await fetch('/ask-ai',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); const d=await res.json(); document.getElementById(loadId).remove(); if(d.chatId) { currentChatId = d.chatId; loadHistory(); } const msgId = 'msg-' + Date.now(); let headerHTML = d.isFallback ? `<div class="ai-header"><span class="badge badge-yellow"><i class="fa-solid fa-globe"></i> Kiến thức ngoài </span></div>` : `<div class="ai-header"><span class="badge badge-blue"><i class="fa-solid fa-book-bookmark"></i>  Giáo Khoa</span></div>`; chat.innerHTML+=`<div class="msg ai"><div class="avatar"><i class="fa-solid fa-robot"></i></div><div class="bubble" id="${msgId}">${headerHTML}<div class="md-content">${marked.parse(d.answer)}</div></div></div>`; setTimeout(() => { renderRichContent(msgId); renderMathInElement(document.getElementById(msgId), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false }); }, 100); chat.scrollTop=chat.scrollHeight; } catch { document.getElementById(loadId).innerHTML='<span style="color:#ef4444; padding:10px;">Lỗi kết nối server!</span>'; } }
+        // --- EXAM LOGIC ---
         function openRAGModal(){ document.getElementById('modal').style.display='flex'; loadFiles(); }
-        async function loadFiles() {
-            const res = await fetch('/list-files'); const files = await res.json(); const container = document.getElementById('fileListContainer');
-            if(files.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>'; return; }
-            container.innerHTML = files.map(f => {
-                const delBtn = (currUser && currUser.role === 'teacher') ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` : '';
-                return `<div class="file-item"><div style="display:flex; align-items:center; gap:12px; overflow:hidden;"><div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div><div style="display:flex; flex-direction:column; overflow:hidden;"><span class="file-name" style="color:#f1f5f9;">${f.name}</span><span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span></div></div>${delBtn}</div>`;
-            }).join('');
-        }
+        async function loadFiles() { const res = await fetch('/list-files'); const files = await res.json(); const container = document.getElementById('fileListContainer'); if(files.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; margin-top:20px; font-style:italic;">Chưa có tài liệu nào.</div>'; return; } container.innerHTML = files.map(f => { const delBtn = (currUser && currUser.role === 'teacher') ? `<i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer; padding:8px;" onclick="deleteFile('${f.name}')" title="Xóa file"></i>` : ''; return `<div class="file-item"><div style="display:flex; align-items:center; gap:12px; overflow:hidden;"><div style="color:var(--primary); font-size:20px;"><i class="fa-solid fa-file-pdf"></i></div><div style="display:flex; flex-direction:column; overflow:hidden;"><span class="file-name" style="color:#f1f5f9;">${f.name}</span><span style="font-size:11px; color:#64748b; text-transform:uppercase; margin-top:2px;">${f.subject}</span></div></div>${delBtn}</div>`; }).join(''); }
         async function deleteFile(n) { if(confirm("Bạn chắc chắn muốn xóa file này khỏi bộ nhớ?")) { try { await fetch('/delete-file', { method:'POST', headers:{'role': currUser.role, 'Content-Type':'application/json'}, body:JSON.stringify({filename:n}) }); loadFiles(); } catch { alert("Lỗi khi xóa!"); } } }
-        async function doUpload() {
-            const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!');
-            const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value);
-            const stt = document.getElementById('stt'); stt.innerText='Đang tải lên...'; stt.style.color='#f59e0b';
-            try { const r=await fetch('/upload-doc',{method:'POST',body:fd}); const d=await r.json(); if(d.success) { stt.innerText='Thành công!'; stt.style.color='#10b981'; loadFiles(); } else { stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444'; } } catch{alert('Lỗi mạng');}
-        }
+        async function doUpload() { const f=document.getElementById('file').files[0]; if(!f)return alert('Vui lòng chọn file!'); const fd=new FormData(); fd.append('file',f); fd.append('role',currUser.role); fd.append('subject',document.getElementById('upSub').value); const stt = document.getElementById('stt'); stt.innerText='Đang tải lên...'; stt.style.color='#f59e0b'; try { const r=await fetch('/upload-doc',{method:'POST',body:fd}); const d=await r.json(); if(d.success) { stt.innerText='Thành công!'; stt.style.color='#10b981'; loadFiles(); } else { stt.innerText='Lỗi: ' + d.error; stt.style.color='#ef4444'; } } catch{alert('Lỗi mạng');} }
 
-        // --- LUYỆN ĐỀ (MỚI) ---
         function openQuizModal() { document.getElementById('quizModal').style.display='flex'; loadExamList(); }
-
-        const subjectMap = {
-            math: "Toán Học", physics: "Vật Lý", chemistry: "Hóa Học", biology: "Sinh Học",
-            literature: "Ngữ Văn", history: "Lịch Sử", geography: "Địa Lý", english: "Tiếng Anh",
-            gdcd: "GDCD", it: "Tin Học", technology: "Công Nghệ"
-        };
+        const subjectMap = { math: "Toán Học", physics: "Vật Lý", chemistry: "Hóa Học", biology: "Sinh Học", literature: "Ngữ Văn", history: "Lịch Sử", geography: "Địa Lý", english: "Tiếng Anh", gdcd: "GDCD", it: "Tin Học", technology: "Công Nghệ" };
 
         async function loadExamList() {
             const sub = document.getElementById('quizSubjectFilter').value;
@@ -459,122 +390,71 @@
             const select = document.getElementById('examSelect');
             select.innerHTML = '<option>Đang tải...</option>';
             try {
-                // 1. GỌI API
                 const url = currUser.role === 'teacher' ? `/list-exams?subject=all` : `/list-exams?subject=${sub}&grade=${grade}`;
                 const res = await fetch(url);
                 const list = await res.json();
-
-                // 2. XỬ LÝ DROPDOWN
                 const filteredListForDropdown = list.filter(e => {
                     const matchSub = (sub === 'all') || (e.subject === sub);
                     const matchGrade = (grade === 'all') || (e.grade === grade);
                     return matchSub && matchGrade;
                 });
-
-                if(filteredListForDropdown.length === 0) {
-                    select.innerHTML = '<option value="">-- Không có đề --</option>';
-                } else {
-                    select.innerHTML = filteredListForDropdown.map(e => {
-                        const subName = subjectMap[e.subject] || e.subject;
-                        return `<option value="${e._id}">(${subName} ${e.grade}) ${e.filename}</option>`;
-                    }).join('');
-                }
-                
-                // 3. XỬ LÝ LIST QUẢN LÝ (GV)
-                if(currUser.role === 'teacher') {
-                    allTeacherExams = list; 
-                    renderGroupedExams(list); 
-                }
-                
-            } catch (e) { select.innerHTML = '<option>Lỗi tải danh sách</option>'; }
+                if(filteredListForDropdown.length === 0) { select.innerHTML = '<option value="">-- Không có đề phù hợp --</option>'; } else { select.innerHTML = filteredListForDropdown.map(e => { const subName = subjectMap[e.subject] || e.subject; return `<option value="${e._id}">(${subName} ${e.grade}) ${e.filename}</option>`; }).join(''); }
+                if(currUser.role === 'teacher') { allTeacherExams = list; renderGroupedExams(list); }
+            } catch (e) { console.error(e); select.innerHTML = '<option>Lỗi tải danh sách</option>'; }
         }
 
         function renderGroupedExams(list) {
             const div = document.getElementById('teacherExamList');
-            if (!list || list.length === 0) {
-                div.innerHTML = '<div style="text-align:center; color:#64748b; font-size:12px; padding:10px;">Chưa có file nào</div>';
-                return;
-            }
-
-            const grouped = {};
-            list.forEach(item => {
-                if (!grouped[item.subject]) grouped[item.subject] = [];
-                grouped[item.subject].push(item);
-            });
-
-            let html = '';
-            Object.keys(grouped).sort().forEach(subKey => {
-                const items = grouped[subKey];
-                const subName = subjectMap[subKey] || subKey.toUpperCase();
-                
-                const itemsHtml = items.map(e => `
-                    <div class="manage-item">
-                        <div class="manage-info">
-                            <span style="font-weight:500;">
-                                <span class="badge-grade">Lớp ${e.grade}</span>
-                                ${e.filename}
-                            </span>
-                            <span class="sub-text"><i class="fa-regular fa-clock"></i> ${new Date(e.uploadedAt).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <i class="fa-solid fa-trash-can btn-delete" onclick="deleteExam('${e._id}')"></i>
-                    </div>
-                `).join('');
-
-                html += `
-                <div class="exam-group">
-                    <div class="exam-group-header" onclick="this.parentElement.classList.toggle('active')">
-                        <span><i class="fa-solid fa-folder-open" style="color:#facc15; margin-right:8px;"></i> ${subName}</span>
-                        <span class="badge" style="background:#334155; color:white; font-size:11px;">${items.length}</span>
-                    </div>
-                    <div class="exam-group-body">${itemsHtml}</div>
-                </div>`;
+            if (!list || list.length === 0) { div.innerHTML = '<div style="text-align:center; color:#64748b; font-size:12px; padding:10px;">Chưa có file nào</div>'; return; }
+            const grouped = {}; list.forEach(item => { if (!grouped[item.subject]) grouped[item.subject] = []; grouped[item.subject].push(item); });
+            let html = ''; Object.keys(grouped).sort().forEach(subKey => {
+                const items = grouped[subKey]; const subName = subjectMap[subKey] || subKey.toUpperCase();
+                const itemsHtml = items.map(e => `<div class="manage-item"><div class="manage-info"><span style="font-weight:500;"><span class="badge-grade">Lớp ${e.grade}</span>${e.filename}</span><span class="sub-text"><i class="fa-regular fa-clock"></i> ${new Date(e.uploadedAt).toLocaleDateString('vi-VN')}</span></div><i class="fa-solid fa-trash-can btn-delete" onclick="deleteExam('${e._id}')"></i></div>`).join('');
+                html += `<div class="exam-group"><div class="exam-group-header" onclick="this.parentElement.classList.toggle('active')"><span><i class="fa-solid fa-folder-open" style="color:#facc15; margin-right:8px;"></i> ${subName}</span><span class="badge" style="background:#334155; color:white; font-size:11px;">${items.length}</span></div><div class="exam-group-body">${itemsHtml}</div></div>`;
             });
             div.innerHTML = html;
         }
 
-        function filterTeacherExams() {
-            const keyword = document.getElementById('examSearchInput').value.toLowerCase();
-            const filtered = allTeacherExams.filter(e => 
-                e.filename.toLowerCase().includes(keyword) || 
-                (subjectMap[e.subject] && subjectMap[e.subject].toLowerCase().includes(keyword))
-            );
-            renderGroupedExams(filtered);
-            if(keyword) document.querySelectorAll('.exam-group').forEach(el => el.classList.add('active'));
-        }
+        function filterTeacherExams() { const keyword = document.getElementById('examSearchInput').value.toLowerCase(); const filtered = allTeacherExams.filter(e => e.filename.toLowerCase().includes(keyword) || (subjectMap[e.subject] && subjectMap[e.subject].toLowerCase().includes(keyword))); renderGroupedExams(filtered); if(keyword) document.querySelectorAll('.exam-group').forEach(el => el.classList.add('active')); }
+        async function deleteExam(id) { if(!confirm("Xóa đề thi này?")) return; try { const res = await fetch('/delete-exam', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ role: currUser.role, examId: id }) }); if((await res.json()).success) { alert("Đã xóa!"); loadExamList(); } else alert("Lỗi xóa!"); } catch { alert("Lỗi mạng!"); } }
 
-        async function deleteExam(id) {
-            if(!confirm("Xóa đề thi này?")) return;
-            try {
-                const res = await fetch('/delete-exam', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ role: currUser.role, examId: id }) });
-                if((await res.json()).success) { alert("Đã xóa!"); loadExamList(); } else alert("Lỗi xóa!");
-            } catch { alert("Lỗi mạng!"); }
+        // --- XỬ LÝ PDF THÀNH ẢNH TRÊN CLIENT ---
+        async function renderPdfToImages(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const images = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                images.push(canvas.toDataURL('image/jpeg'));
+            }
+            return images;
         }
 
         async function uploadExam() {
-            const f = document.getElementById('newExamFile').files[0];
-            if(!f) return alert("Chưa chọn file!");
-            const fd = new FormData();
-            fd.append('file', f);
-            fd.append('role', currUser.role);
-            fd.append('subject', document.getElementById('newExamSubject').value);
-            fd.append('grade', document.getElementById('newExamGrade').value);
-            
-            document.getElementById('quizStt').innerText = "Đang xử lý & tạo đề... (20-40s)";
-            try {
-                const res = await fetch('/upload-exam', { method: 'POST', body: fd });
-                const d = await res.json();
-                if(d.success) { alert("Thành công!"); loadExamList(); document.getElementById('quizStt').innerText = ""; } else alert(d.error);
-            } catch { alert("Lỗi mạng!"); }
+            const f = document.getElementById('newExamFile').files[0]; if(!f) return alert("Chưa chọn file!");
+            const fd = new FormData(); fd.append('file', f); fd.append('role', currUser.role); fd.append('subject', document.getElementById('newExamSubject').value); fd.append('grade', document.getElementById('newExamGrade').value);
+            if(f.type === 'application/pdf') {
+                document.getElementById('quizStt').innerText = "Đang xử lý PDF thành ảnh... (Vui lòng đợi)";
+                try { const images = await renderPdfToImages(f); fd.append('pdf_images', JSON.stringify(images)); } catch(e) { console.error(e); alert("Lỗi xử lý PDF ở trình duyệt!"); return; }
+            }
+            document.getElementById('quizStt').innerText = "Đang gửi lên Server & Tạo đề... (20-40s)";
+            try { const res = await fetch('/upload-exam', { method: 'POST', body: fd }); const d = await res.json(); if(d.success) { alert("Thành công!"); loadExamList(); document.getElementById('quizStt').innerText = ""; } else { alert("Lỗi: " + d.error); document.getElementById('quizStt').innerText = ""; } } catch { alert("Lỗi mạng!"); }
         }
 
         async function takeQuiz() {
-            const id = document.getElementById('examSelect').value;
-            if(!id) return alert("Vui lòng chọn đề thi!");
+            const id = document.getElementById('examSelect').value; if(!id) return alert("Vui lòng chọn đề thi!");
             document.getElementById('quizStt').innerText = "Đang tải bài thi...";
             try {
                 const res = await fetch('/take-quiz', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({examId: id}) });
                 const d = await res.json();
                 if(d.success) {
+                    currentExamImages = d.pageImages || []; // Lưu ảnh trang vào biến toàn cục
                     document.getElementById('quizModal').style.display = 'none';
                     const chat = document.getElementById('chat');
                     const welcome = document.getElementById('welcomeMsg'); if(welcome) welcome.remove();
@@ -588,7 +468,36 @@
             } catch { alert("Lỗi kết nối"); }
         }
 
-        // --- RENDER QUIZ UI ---
+        // --- HÀM CẮT ẢNH TỪ CANVAS ---
+        function cropImageFromPage(pageBase64, rect, container) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Tọa độ từ AI là 0-1000, cần scale về kích thước thật của ảnh
+                const [ymin, xmin, ymax, xmax] = rect;
+                const scaleX = img.width / 1000;
+                const scaleY = img.height / 1000;
+                
+                const cropX = xmin * scaleX;
+                const cropY = ymin * scaleY;
+                const cropW = (xmax - xmin) * scaleX;
+                const cropH = (ymax - ymin) * scaleY;
+
+                canvas.width = cropW;
+                canvas.height = cropH;
+                
+                // Vẽ phần cắt lên canvas mới
+                ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                
+                // Chèn canvas vào container
+                canvas.className = 'crop-canvas';
+                container.appendChild(canvas);
+            };
+            img.src = pageBase64;
+        }
+
         function renderRichContent(containerId) {
             const container = (typeof containerId === 'string') ? document.getElementById(containerId) : containerId;
             if (!container) return;
@@ -601,12 +510,31 @@
                         q.options.forEach((opt, oIdx) => {
                             optsHTML += `<div class="quiz-opt" onclick="checkAnswer(this, ${oIdx}, ${q.correct}, '${(q.explain||'').replace(/'/g, "\\'")}')"><div style="width:24px; height:24px; background:#334155; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${String.fromCharCode(65+oIdx)}</div>${opt}</div>`;
                         });
+                        
                         const qDiv = document.createElement('div'); qDiv.className = 'quiz-item';
-                        qDiv.innerHTML = `<div class="quiz-question">Câu ${idx + 1}: ${q.question}</div><div class="quiz-options">${optsHTML}</div><div class="quiz-explain"></div>`;
+                        // Thêm vùng chứa ảnh
+                        let imgContainerHTML = '';
+                        if (q.image_info && currentExamImages[q.image_info.page]) {
+                            imgContainerHTML = `<div id="img-crop-${idx}"></div>`;
+                        } else if (q.question.includes('[[IMG_')) {
+                             // Fallback cho Word
+                            q.question = q.question.replace(/\[\[IMG_(\d+)\]\]/g, (match, index) => {
+                                const imgData = currentExamImages[parseInt(index)]; // Với Word thì currentExamImages là array ảnh tách ra
+                                return imgData ? `<br><img src="${imgData}" style="max-width:100%; border-radius:8px; margin:10px 0;" /><br>` : "";
+                            });
+                        }
+
+                        qDiv.innerHTML = `<div class="quiz-question">Câu ${idx + 1}: ${q.question}</div>${imgContainerHTML}<div class="quiz-options">${optsHTML}</div><div class="quiz-explain"></div>`;
                         quizHTML.appendChild(qDiv);
+
+                        // Thực hiện cắt ảnh sau khi DOM đã được thêm
+                        if (q.image_info && currentExamImages[q.image_info.page]) {
+                            const target = qDiv.querySelector(`#img-crop-${idx}`);
+                            cropImageFromPage(currentExamImages[q.image_info.page], q.image_info.rect, target);
+                        }
                     });
                     cb.parentElement.replaceWith(quizHTML);
-                } catch (e) {}
+                } catch (e) { console.error(e); }
             });
         }
 
