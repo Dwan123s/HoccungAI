@@ -6,8 +6,9 @@ const multer = require('multer');
 const mammoth = require('mammoth');
 const path = require('path');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-// Dùng pdf-lib (Đã cài lại ở Bước 1)
+// Dùng pdf-lib (Đã cài lại ở Bước trước)
 const { PDFDocument, PDFName } = require('pdf-lib');
 
 let pdfParse = require('pdf-parse');
@@ -21,20 +22,24 @@ const PORT = process.env.PORT || 3000;
 // --- KẾT NỐI MONGODB ---
 const MONGO_URI = process.env.MONGODB_URI;
 if (!MONGO_URI) {
-    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI!");
+    console.error("❌ LỖI: Chưa cấu hình MONGODB_URI trong file .env hoặc biến môi trường!");
 } else {
     mongoose.connect(MONGO_URI)
         .then(() => console.log("✅ Đã kết nối MongoDB Cloud"))
-        .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
+        .catch(err => {
+            console.error("❌ Lỗi kết nối MongoDB:", err);
+            // Không thoát process để server vẫn chạy, nhưng sẽ báo lỗi khi thao tác DB
+        });
 }
 
-// --- SCHEMA ---
+// --- SCHEMA (SỬA LỖI OVERWRITE MODEL) ---
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'student' }
 });
-const User = mongoose.model('User', UserSchema);
+// Kiểm tra xem model đã tồn tại chưa trước khi tạo mới
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 const ChatSchema = new mongoose.Schema({
     id: { type: String, unique: true },
@@ -44,7 +49,7 @@ const ChatSchema = new mongoose.Schema({
     timestamp: Number,
     messages: Array 
 });
-const Chat = mongoose.model('Chat', ChatSchema);
+const Chat = mongoose.models.Chat || mongoose.model('Chat', ChatSchema);
 
 const KnowledgeSchema = new mongoose.Schema({
     content: String,
@@ -52,7 +57,7 @@ const KnowledgeSchema = new mongoose.Schema({
     source: String,
     subject: String
 });
-const Knowledge = mongoose.model('Knowledge', KnowledgeSchema);
+const Knowledge = mongoose.models.Knowledge || mongoose.model('Knowledge', KnowledgeSchema);
 
 const ExamFileSchema = new mongoose.Schema({
     filename: String,
@@ -64,15 +69,15 @@ const ExamFileSchema = new mongoose.Schema({
     uploadedBy: String,
     uploadedAt: { type: Date, default: Date.now }
 });
-const ExamFile = mongoose.model('ExamFile', ExamFileSchema);
+const ExamFile = mongoose.models.ExamFile || mongoose.model('ExamFile', ExamFileSchema);
 
-// --- CONFIG (SỬA LỖI MULTER TẠI ĐÂY) ---
+// --- CONFIG ---
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: { 
-        fileSize: 100 * 1024 * 1024, // 100MB cho file
-        fieldSize: 100 * 1024 * 1024 // 100MB cho dữ liệu text/base64 (Fix lỗi Field value too long)
+        fileSize: 100 * 1024 * 1024, // 100MB
+        fieldSize: 100 * 1024 * 1024 
     }
 });
 
@@ -141,11 +146,9 @@ function cosineSimilarity(vecA, vecB) {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// --- XỬ LÝ FILE ---
 async function processExamFile(buffer, mimeType) {
     let textContent = "";
     let images = [];
-
     if (mimeType.includes('word') || mimeType.includes('officedocument')) {
         const result = await mammoth.convertToHtml({ buffer: buffer });
         let html = result.value;
@@ -157,7 +160,6 @@ async function processExamFile(buffer, mimeType) {
             return ` [[IMG_${imgIndex++}]] `; 
         });
         textContent = textContent.replace(/<[^>]*>?/gm, '').replace(/\n\s*\n/g, '\n').trim();
-
     } else if (mimeType === 'application/pdf') {
         try {
             const data = await pdfParse(buffer);
@@ -169,19 +171,16 @@ async function processExamFile(buffer, mimeType) {
     return { content: textContent, images: images };
 }
 
-// --- TẠO QUIZ (PROMPT THÔNG MINH - YÊU CẦU TỌA ĐỘ CẮT ẢNH) ---
 async function generateQuizDataFromAI(dataInput, mimeType, extractedImagesCount = 0) {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" });
     
     let imgInstruction = "";
     if (mimeType === 'application/pdf') {
-        // YÊU CẦU AI TRẢ VỀ TỌA ĐỘ (RECT)
         imgInstruction = `
         - File này là PDF (tôi đã chuyển thành ảnh).
         - Nếu câu hỏi có hình vẽ/đồ thị: Hãy xác định tọa độ vùng chứa hình đó.
         - Trả về trường "image_info": { "page": số_thứ_tự_trang (0,1...), "rect": [ymin, xmin, ymax, xmax] }.
         - Tọa độ rect tính theo thang 1000 (0 là mép trên/trái, 1000 là mép dưới/phải).
-        - Ví dụ: Hình nằm ở nửa trên trang 1 -> "image_info": { "page": 0, "rect": [100, 100, 500, 900] }
         `;
     } else {
         imgInstruction = `- Nếu là file Word, giữ nguyên ký hiệu [[IMG_x]].`;
@@ -200,7 +199,7 @@ async function generateQuizDataFromAI(dataInput, mimeType, extractedImagesCount 
             "options": ["A...", "B...", "C...", "D..."],
             "correct": 0,
             "explain": "Giải thích...",
-            "image_info": { "page": 0, "rect": [ymin, xmin, ymax, xmax] } // Chỉ có nếu câu hỏi có hình
+            "image_info": { "page": 0, "rect": [ymin, xmin, ymax, xmax] } 
         }
     ]`;
 
@@ -223,9 +222,64 @@ async function generateQuizDataFromAI(dataInput, mimeType, extractedImagesCount 
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
-// AUTH
-app.post('/register', async (req, res) => { const { username, password, role, secretCode } = req.body; if (!username || username.length < 4) return res.json({ success: false, error: "Tên > 4 ký tự!" }); if (!password || password.length < 6) return res.json({ success: false, error: "Mật khẩu > 6 ký tự!" }); try { const existingUser = await User.findOne({ username }); if (existingUser) return res.json({ success: false, error: "Tên đã tồn tại!" }); let finalRole = 'student'; if (role === 'teacher') { if (secretCode !== TEACHER_SECRET_CODE) return res.json({ success: false, error: "Sai mã giáo viên!" }); finalRole = 'teacher'; } const salt = await bcrypt.genSalt(10); const hashedPassword = await bcrypt.hash(password, salt); const newUser = new User({ username, password: hashedPassword, role: finalRole }); await newUser.save(); res.json({ success: true, user: { username, role: finalRole } }); } catch (e) { res.status(500).json({ success: false, error: "Lỗi DB" }); } });
-app.post('/login', async (req, res) => { const { username, password } = req.body; try { const user = await User.findOne({ username }); if (!user) return res.json({ success: false, error: "Sai tài khoản!" }); const isMatch = await bcrypt.compare(password, user.password); if (!isMatch) return res.json({ success: false, error: "Sai mật khẩu!" }); res.json({ success: true, user: { username: user.username, role: user.role } }); } catch (e) { res.status(500).json({ success: false, error: "Lỗi DB" }); } });
+// --- AUTH ROUTE (ĐÃ SỬA LỖI LOGIC VÀ THÊM LOG) ---
+app.post('/register', async (req, res) => { 
+    console.log("Đăng ký request:", req.body); // Log để debug
+    const { username, password, role, secretCode } = req.body; 
+    
+    if (!username || username.length < 4) return res.json({ success: false, error: "Tên > 4 ký tự!" }); 
+    if (!password || password.length < 6) return res.json({ success: false, error: "Mật khẩu > 6 ký tự!" }); 
+    
+    try { 
+        // Kiểm tra kết nối DB trước
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(500).json({ success: false, error: "Chưa kết nối Database!" });
+        }
+
+        const existingUser = await User.findOne({ username }); 
+        if (existingUser) return res.json({ success: false, error: "Tên đã tồn tại!" }); 
+        
+        let finalRole = 'student'; 
+        if (role === 'teacher') { 
+            if (secretCode !== TEACHER_SECRET_CODE) return res.json({ success: false, error: "Sai mã giáo viên!" }); 
+            finalRole = 'teacher'; 
+        } 
+        
+        const salt = await bcrypt.genSalt(10); 
+        const hashedPassword = await bcrypt.hash(password, salt); 
+        const newUser = new User({ username, password: hashedPassword, role: finalRole }); 
+        await newUser.save(); 
+        
+        console.log("Đăng ký thành công:", username);
+        res.json({ success: true, user: { username, role: finalRole } }); 
+    } catch (e) { 
+        console.error("Lỗi Đăng Ký:", e);
+        res.status(500).json({ success: false, error: "Lỗi Server: " + e.message }); 
+    } 
+});
+
+app.post('/login', async (req, res) => { 
+    console.log("Đăng nhập request:", req.body);
+    const { username, password } = req.body; 
+    
+    try { 
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(500).json({ success: false, error: "Chưa kết nối Database!" });
+        }
+
+        const user = await User.findOne({ username }); 
+        if (!user) return res.json({ success: false, error: "Sai tài khoản!" }); 
+        
+        const isMatch = await bcrypt.compare(password, user.password); 
+        if (!isMatch) return res.json({ success: false, error: "Sai mật khẩu!" }); 
+        
+        console.log("Đăng nhập thành công:", username);
+        res.json({ success: true, user: { username: user.username, role: user.role } }); 
+    } catch (e) { 
+        console.error("Lỗi Đăng Nhập:", e);
+        res.status(500).json({ success: false, error: "Lỗi Server: " + e.message }); 
+    } 
+});
 
 // CHAT & RAG
 app.get('/history', async (req, res) => { try { const userChats = await Chat.find({ username: req.query.username }, 'id title timestamp').sort({ timestamp: -1 }); res.json(userChats); } catch (e) { res.json([]); } });
@@ -245,7 +299,6 @@ app.post('/upload-exam', upload.single('file'), async (req, res) => {
         const { content, images: wordImages } = await processExamFile(req.file.buffer, req.file.mimetype);
         
         let finalImages = wordImages;
-        // Nếu là PDF, lấy ảnh từ Frontend gửi lên (fix lỗi Windows)
         if (req.file.mimetype === 'application/pdf' && req.body.pdf_images) {
             try { finalImages = JSON.parse(req.body.pdf_images); } catch (e) {}
         }
@@ -299,17 +352,10 @@ app.post('/take-quiz', async (req, res) => {
         const { examId } = req.body;
         const exam = await ExamFile.findById(examId);
         if (!exam || !exam.quizData) return res.status(404).json({ success: false, error: "Lỗi đề thi!" });
-        
-        // Trả về dữ liệu câu hỏi và cả bộ ảnh gốc (để cắt)
-        res.json({ 
-            success: true, 
-            data: exam.quizData, 
-            pageImages: exam.images 
-        });
+        res.json({ success: true, data: exam.quizData, pageImages: exam.images });
     } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 });
 
-// --- CHAT RAG ---
 app.post('/ask-ai', async (req, res) => {
     try {
         const { prompt, subject, username, chatId } = req.body;
@@ -336,21 +382,10 @@ app.post('/ask-ai', async (req, res) => {
         const systemInstruction = `
             Bạn là Giáo viên Trợ giảng AI chuyên nghiệp.
         NHIỆM VỤ: Trả lời câu hỏi học sinh dựa trên "DỮ LIỆU THAM KHẢO" ngắn gọn dễ hiểu dành cho học sinh.
-        DỮ LIỆU THAM KHẢO:
-        ${contextContent}
-       ⛔ YÊU CẦU VỀ TRÌNH BÀY (RẤT QUAN TRỌNG):
-        1. **Bố cục rõ ràng:** Chia câu trả lời thành các đoạn nhỏ, dễ đọc. Sử dụng các tiêu đề (Heading) nếu câu trả lời dài.
-        2. **Highlight từ khóa:** BẮT BUỘC phải **in đậm** (dùng **text**) các con số, tên riêng, định nghĩa quan trọng hoặc kết quả chính.
-        3. **Dùng danh sách:** Sử dụng gạch đầu dòng (bullet points) cho các ý liệt kê để dễ nhìn.
-        4. **Bảng biểu:** Nếu dữ liệu có tính so sánh, hãy trình bày dưới dạng Bảng (Table).
-
-        ⛔ QUY TẮC XỬ LÝ NỘI DUNG:
-        - Nếu có thông tin trong dữ liệu: Trả lời chính xác, ngắn gọn và súc tích và chỉ trả lời câu hỏi không ghi "Theo dữ liệu nào hết" gì thêm và ưu tiên những phần cập nhật.
-        - Chỉ khi nào CHẮC CHẮN 100% không có trong dữ liệu thì mới dùng kiến thức ngoài và thêm cảnh báo: "*⚠️ Thông tin có thể sai lệch!:**" ở dòng đầu tiên thôi không ghi gì thêm và chỉ trả lời câu hỏi và câu hỏi vẫn phải chính xác.
+        DỮ LIỆU THAM KHẢO: ${contextContent}
         `;
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemInstruction });
-        
         let result, responseText;
         try {
             result = await model.generateContent(prompt);
